@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
-use App\Models\Order;
+use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class DashboardController extends Controller
         $pendingPurchases = Purchase::where('status', 'pending')->get();
 
         // Ringkasan keuangan
-        $totalIncome = Order::where('status_pesanan', 'completed')
+        $totalIncome = Transaction::where('status_pesanan', 'completed')
             ->whereMonth('created_at', Carbon::now()->month)
             ->sum('sub_total');
 
@@ -35,7 +35,7 @@ class DashboardController extends Controller
         });
 
         $salesData = $months->map(function ($month) {
-            return Order::where('status_pesanan', 'completed')
+            return Transaction::where('status_pesanan', 'completed')
                 ->whereMonth('created_at', $month->month)
                 ->whereYear('created_at', $month->year)
                 ->sum('sub_total');

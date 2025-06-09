@@ -10,16 +10,19 @@ class Customer extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code',
-        'name',
+        'nama',
         'email',
-        'phone',
-        'address',
+        'telepon',
+        'alamat',
+        'jenis',
+        'nama_bank',
+        'pemegang_rekening',
+        'nomor_rekening',
+        'foto',
+        'total_pembelian',
+        'loyalty_level',
         'points',
-        'loyalty_level', // bronze, silver, gold, platinum
-        'total_purchase',
-        'last_purchase_at',
-        'notes'
+        'last_purchase_at'
     ];
 
     protected $casts = [
@@ -30,7 +33,7 @@ class Customer extends Model
 
     public function transactions()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->hasMany(Transaction::class, 'pelanggan_id');
     }
 
     public function getOutstandingPaymentAttribute()
@@ -89,10 +92,5 @@ class Customer extends Model
     {
         // 1 point = Rp 1.000
         return $this->points * 1000;
-    }
-
-    public function orders()
-    {
-        return $this->hasMany(Order::class, 'pelanggan_id');
     }
 } 

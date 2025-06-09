@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\PDF;
 use App\Exports\FinancialReportExport;
+use App\Models\Transaction;
 
 class FinancialReportController extends Controller
 {

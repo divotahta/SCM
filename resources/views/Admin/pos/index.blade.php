@@ -94,7 +94,7 @@
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">Subtotal</span>
                                     <span class="font-medium subtotal">Rp 0</span>
-                                        </div>
+                                </div>
                                 <div class="flex justify-between text-sm">
                                     <span class="text-gray-600">PPN (11%)</span>
                                     <span class="font-medium tax">Rp 0</span>
@@ -102,8 +102,8 @@
                                 <div class="flex justify-between text-lg font-semibold">
                                     <span>Total</span>
                                     <span class="total">Rp 0</span>
-                                    </div>
                                 </div>
+                            </div>
 
                             <!-- Payment Form -->
                             <form id="checkoutForm" class="mt-4 space-y-4">
@@ -119,12 +119,36 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Pelanggan</label>
-                                    <select name="customer_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                        <option value="">Umum</option>
-                                        @foreach($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->nama }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="mt-1 space-y-2">
+                                        <div class="flex items-center space-x-2">
+                                            <input type="radio" id="existing_customer" name="customer_type" value="existing" checked class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                                            <label for="existing_customer" class="text-sm text-gray-700">Pelanggan yang sudah ada</label>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <input type="radio" id="new_customer" name="customer_type" value="new" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                                            <label for="new_customer" class="text-sm text-gray-700">Pelanggan baru</label>
+                                        </div>
+                                        
+                                        <div id="existing_customer_select">
+                                            <select name="customer_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                                @foreach($customers as $customer)
+                                                    <option value="{{ $customer->id }}">{{ $customer->nama }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        
+                                        <div id="new_customer_input" class="hidden">
+                                            <input type="text" 
+                                                   name="new_customer_name" 
+                                                   placeholder="Nama pelanggan baru"
+                                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Catatan</label>
+                                    <textarea name="notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Tambahkan catatan untuk pesanan ini..."></textarea>
                                 </div>
 
                                 <div>
@@ -250,66 +274,64 @@
         }
 
         // Update cart display
-            function updateCart() {
-            const cartContainer = document.querySelector('.cart-items');
+        function updateCart() {
+            const cartItemsContainer = document.querySelector('.cart-items');
+            cartItemsContainer.innerHTML = '';
+            
+            cart.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'flex items-center justify-between p-2 bg-white rounded-lg shadow-sm';
+                itemElement.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="text-sm font-medium text-gray-900">${item.name}</h4>
+                        <div class="mt-1 flex items-center space-x-2">
+                            <input type="number" 
+                                   value="${item.quantity}" 
+                                   min="1" 
+                                   max="${item.stock}"
+                                   onchange="updateQuantity(${item.id}, this.value)"
+                                   class="w-16 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            <span class="text-sm text-gray-500">x ${formatCurrency(item.price)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm font-medium">${formatCurrency(item.price * item.quantity)}</span>
+                        <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-800">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(itemElement);
+            });
+            
+            updateTotals();
+        }
+
+        // Fungsi untuk memperbarui total
+        function updateTotals() {
             const subtotalElement = document.querySelector('.subtotal');
             const taxElement = document.querySelector('.tax');
             const totalElement = document.querySelector('.total');
             
-            // Update cart items display
-            if (cart.length === 0) {
-                cartContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Keranjang kosong</p>';
-            } else {
-                cartContainer.innerHTML = cart.map(item => `
-                    <div class="flex items-center justify-between p-3 bg-white rounded-lg border">
-                        <div class="flex-1">
-                            <h4 class="text-sm font-medium text-gray-900">${item.name}</h4>
-                            <p class="text-sm text-gray-500">${formatCurrency(item.price)} x ${item.quantity}</p>
-                            <p class="text-xs text-gray-400">Stok: ${item.stock}</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
-                                    class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                                </svg>
-                            </button>
-                            <span class="text-sm font-medium px-2">${item.quantity}</span>
-                            <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
-                                    class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
-                                    ${item.quantity >= item.stock ? 'disabled title="Stok habis"' : ''}>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                            </button>
-                            <button onclick="removeFromCart(${item.id})" 
-                                    class="p-1 text-red-500 hover:text-red-700 hover:bg-red-100 rounded ml-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            // Calculate totals
+            // Hitung total
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const tax = subtotal * 0.11;
             const total = subtotal + tax;
-
-            // Update total displays
+            
+            // Update tampilan total
             subtotalElement.textContent = formatCurrency(subtotal);
             taxElement.textContent = formatCurrency(tax);
             totalElement.textContent = formatCurrency(total);
-
-            // Update amount paid input
+            
+            // Update input jumlah bayar
             const amountPaidInput = document.querySelector('input[name="amount_paid"]');
             if (amountPaidInput && total > 0) {
                 amountPaidInput.value = total;
             }
-
-            // Update checkout button state
+            
+            // Update status tombol checkout
             const checkoutButton = document.querySelector('#checkoutForm button[type="submit"]');
             if (checkoutButton) {
                 checkoutButton.disabled = cart.length === 0;
@@ -369,10 +391,10 @@
                 checkoutForm.addEventListener('submit', async function(e) {
                     e.preventDefault();
 
-                if (cart.length === 0) {
+                    if (cart.length === 0) {
                         alert('Keranjang belanja kosong!');
-                    return;
-                }
+                        return;
+                    }
 
                     const formData = new FormData(this);
                     const amountPaid = parseFloat(formData.get('amount_paid'));
@@ -380,8 +402,8 @@
 
                     if (amountPaid < total) {
                         alert('Jumlah bayar kurang dari total!');
-                    return;
-                }
+                        return;
+                    }
 
                     // Disable form during processing
                     const submitButton = this.querySelector('button[type="submit"]');
@@ -390,27 +412,46 @@
                     submitButton.textContent = 'Memproses...';
 
                     try {
+                        // Prepare data
+                        const customerType = formData.get('customer_type');
+                        const customerData = {
+                            items: cart,
+                            payment_method: formData.get('payment_method'),
+                            amount_paid: amountPaid,
+                            notes: formData.get('notes')
+                        };
+
+                        // Handle customer data
+                        if (customerType === 'existing') {
+                            customerData.pelanggan_id = formData.get('customer_id') || null;
+                        } else {
+                            // Jika pelanggan baru, kirim data pelanggan baru
+                            const newCustomerName = formData.get('new_customer_name');
+                            if (newCustomerName) {
+                                customerData.pelanggan = {
+                                    nama: newCustomerName
+                                };
+                            } else {
+                                customerData.pelanggan_id = null; // Set null jika tidak ada nama pelanggan
+                            }
+                        }
+
                         const response = await fetch('{{ route("admin.pos.checkout") }}', {
-                    method: 'POST',
-                    headers: {
+                            method: 'POST',
+                            headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                items: cart,
-                                payment_method: formData.get('payment_method'),
-                                customer_id: formData.get('customer_id') || null,
-                                amount_paid: amountPaid
-                            })
+                            body: JSON.stringify(customerData)
                         });
 
                         const result = await response.json();
 
-                    if (result.success) {
+                        if (result.success) {
                             // Reset cart
                             cart = [];
-                        updateCart();
+                            updateCart();
                             this.reset();
 
                             // Show success message
@@ -422,7 +463,7 @@
                                 const printUrl = '{{ url("admin/pos/receipt") }}/' + result.data.transaction_id;
                                 window.open(printUrl, '_blank');
                             }
-                    } else {
+                        } else {
                             alert(result.message || 'Terjadi kesalahan saat memproses pembayaran');
                         }
                     } catch (error) {
@@ -436,6 +477,22 @@
                 });
             }
         }
+
+        // Handle customer type change
+        document.querySelectorAll('input[name="customer_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const existingSelect = document.getElementById('existing_customer_select');
+                const newInput = document.getElementById('new_customer_input');
+                
+                if (this.value === 'existing') {
+                    existingSelect.classList.remove('hidden');
+                    newInput.classList.add('hidden');
+                } else {
+                    existingSelect.classList.add('hidden');
+                    newInput.classList.remove('hidden');
+                }
+            });
+        });
 
         // Initialize all functionality when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {

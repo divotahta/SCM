@@ -18,24 +18,24 @@ class PurchaseController extends Controller
     {
         $query = Purchase::with(['supplier', 'details.product'])
             ->when($request->search, function($q) use ($request) {
-                $q->where('invoice_number', 'like', "%{$request->search}%")
+                $q->where('nomor_pembelian', 'like', "%{$request->search}%")
                     ->orWhereHas('supplier', function($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
+                        $q->where('nama', 'like', "%{$request->search}%");
                     });
             })
             ->when($request->status, function($q) use ($request) {
-                $q->where('status', $request->status);
+                $q->where('status_pembelian', $request->status);
             })
             ->when($request->date_from, function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('tanggal_pembelian', '>=', $request->date_from);
             })
             ->when($request->date_to, function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
+                $q->whereDate('tanggal_pembelian', '<=', $request->date_to);
             });
 
         $purchases = $query->latest()->paginate(10);
-        $draftCount = Purchase::where('status', 'draft')->count();
-        $pendingCount = Purchase::where('status', 'pending')->count();
+        $draftCount = Purchase::where('status_pembelian', 'draft')->count();
+        $pendingCount = Purchase::where('status_pembelian', 'pending')->count();
 
         return view('admin.purchases.index', compact('purchases', 'draftCount', 'pendingCount'));
     }
@@ -53,43 +53,32 @@ class PurchaseController extends Controller
             DB::beginTransaction();
 
             $purchase = Purchase::create([
-                'invoice_number' => $this->generateInvoiceNumber(),
-                'supplier_id' => $request->supplier_id,
-                'purchase_date' => $request->purchase_date,
-                'total' => 0,
-                'status' => 'draft',
-                'notes' => $request->notes,
-                'created_by' => Auth::id()
+                'tanggal_pembelian' => $request->tanggal_pembelian,
+                'nomor_pembelian' => $this->generateInvoiceNumber(),
+                'pemasok_id' => $request->pemasok_id,
+                'total_amount' => 0,
+                'catatan' => $request->catatan,
+                'status_pembelian' => 'draft',
+                'dibuat_oleh' => Auth::id()
             ]);
 
             $total = 0;
             foreach ($request->products as $item) {
                 $product = Product::find($item['id']);
-                $subtotal = $item['quantity'] * $item['price'];
+                $subtotal = $item['jumlah'] * $item['harga_satuan'];
                 
                 PurchaseDetail::create([
                     'pembelian_id' => $purchase->id,
                     'produk_id' => $item['id'],
-                    'jumlah' => $item['quantity'],
-                    'harga_satuan' => $item['price'],
+                    'jumlah' => $item['jumlah'],
+                    'harga_satuan' => $item['harga_satuan'],
                     'total' => $subtotal
                 ]);
 
                 $total += $subtotal;
             }
 
-            $purchase->update(['total' => $total]);
-
-            // Log pembuatan pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'create',
-                'description' => "Pembelian baru dibuat",
-                'old_data' => null,
-                'new_data' => $purchase->toArray(),
-                'user_id' => Auth::id()
-            ]);
+            $purchase->update(['total_amount' => $total]);
 
             DB::commit();
 
@@ -109,16 +98,13 @@ class PurchaseController extends Controller
 
     public function show(Purchase $purchase)
     {
-        $purchase->load(['supplier', 'details.product', 'logs' => function($query) {
-            $query->latest();
-        }]);
-        
+        $purchase->load(['supplier', 'details.product', 'approvedBy', 'rejectedBy', 'receivedBy']);
         return view('admin.purchases.show', compact('purchase'));
     }
 
     public function edit(Purchase $purchase)
     {
-        if ($purchase->status !== 'draft') {
+        if ($purchase->status_pembelian !== 'draft') {
             return redirect()->route('admin.purchases.show', $purchase->id)
                 ->with('error', 'Pembelian tidak dapat diedit karena status bukan draft');
         }
@@ -132,7 +118,7 @@ class PurchaseController extends Controller
 
     public function update(Request $request, Purchase $purchase)
     {
-        if ($purchase->status !== 'draft') {
+        if ($purchase->status_pembelian !== 'draft') {
             return response()->json([
                 'success' => false,
                 'message' => 'Pembelian tidak dapat diedit karena status bukan draft'
@@ -143,9 +129,9 @@ class PurchaseController extends Controller
             DB::beginTransaction();
 
             $purchase->update([
-                'supplier_id' => $request->supplier_id,
-                'purchase_date' => $request->purchase_date,
-                'notes' => $request->notes
+                'pemasok_id' => $request->pemasok_id,
+                'tanggal_pembelian' => $request->tanggal_pembelian,
+                'catatan' => $request->catatan
             ]);
 
             // Hapus detail lama
@@ -155,31 +141,20 @@ class PurchaseController extends Controller
             $total = 0;
             foreach ($request->products as $item) {
                 $product = Product::find($item['id']);
-                $subtotal = $item['quantity'] * $item['price'];
+                $subtotal = $item['jumlah'] * $item['harga_satuan'];
                 
                 PurchaseDetail::create([
                     'pembelian_id' => $purchase->id,
                     'produk_id' => $item['id'],
-                    'jumlah' => $item['quantity'],
-                    'harga_satuan' => $item['price'],
+                    'jumlah' => $item['jumlah'],
+                    'harga_satuan' => $item['harga_satuan'],
                     'total' => $subtotal
                 ]);
 
                 $total += $subtotal;
             }
 
-            $purchase->update(['total' => $total]);
-
-            // Log update pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'update',
-                'description' => "Pembelian diperbarui",
-                'old_data' => $purchase->getOriginal(),
-                'new_data' => $purchase->toArray(),
-                'user_id' => Auth::id()
-            ]);
+            $purchase->update(['total_amount' => $total]);
 
             DB::commit();
 
@@ -199,25 +174,25 @@ class PurchaseController extends Controller
 
     public function submit(Purchase $purchase)
     {
-        if ($purchase->status !== 'draft') {
+        if ($purchase->status_pembelian !== 'draft') {
             return redirect()->back()->with('error', 'Status pembelian tidak valid');
         }
 
         try {
             DB::beginTransaction();
 
-            $purchase->update(['status' => 'pending']);
+            $purchase->update(['status_pembelian' => 'pending']);
 
             // Log pengajuan pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'submit',
-                'description' => "Pembelian diajukan untuk persetujuan",
-                'old_data' => ['status' => 'draft'],
-                'new_data' => ['status' => 'pending'],
-                'user_id' => Auth::id()
-            ]);
+            // TransactionLog::create([
+            //     'transaction_id' => $purchase->id,
+            //     'transaction_type' => 'purchase',
+            //     'action' => 'submit',
+            //     'description' => "Pembelian diajukan untuk persetujuan",
+            //     'old_data' => ['status_pembelian' => 'draft'],
+            //     'new_data' => ['status_pembelian' => 'pending'],
+            //     'user_id' => Auth::id()
+            // ]);
 
             DB::commit();
 
@@ -235,7 +210,7 @@ class PurchaseController extends Controller
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menyetujui pembelian');
         }
 
-        if ($purchase->status !== 'pending') {
+        if ($purchase->status_pembelian !== 'pending') {
             return redirect()->back()->with('error', 'Status pembelian tidak valid');
         }
 
@@ -243,21 +218,21 @@ class PurchaseController extends Controller
             DB::beginTransaction();
 
             $purchase->update([
-                'status' => 'approved',
+                'status_pembelian' => 'approved',
                 'approved_by' => Auth::id(),
                 'approved_at' => now()
             ]);
 
             // Log persetujuan pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'approve',
-                'description' => "Pembelian disetujui oleh owner",
-                'old_data' => ['status' => 'pending'],
-                'new_data' => ['status' => 'approved'],
-                'user_id' => Auth::id()
-            ]);
+            // TransactionLog::create([
+            //     'transaction_id' => $purchase->id,
+            //     'transaction_type' => 'purchase',
+            //     'action' => 'approve',
+            //     'description' => "Pembelian disetujui oleh owner",
+            //     'old_data' => ['status_pembelian' => 'pending'],
+            //     'new_data' => ['status_pembelian' => 'approved'],
+            //     'user_id' => Auth::id()
+            // ]);
 
             DB::commit();
 
@@ -271,7 +246,7 @@ class PurchaseController extends Controller
 
     public function receive(Purchase $purchase)
     {
-        if ($purchase->status !== 'approved') {
+        if ($purchase->status_pembelian !== 'approved') {
             return redirect()->back()->with('error', 'Status pembelian tidak valid');
         }
 
@@ -279,7 +254,7 @@ class PurchaseController extends Controller
             DB::beginTransaction();
 
             $purchase->update([
-                'status' => 'received',
+                'status_pembelian' => 'received',
                 'received_by' => Auth::id(),
                 'received_at' => now()
             ]);
@@ -292,15 +267,15 @@ class PurchaseController extends Controller
             }
 
             // Log penerimaan pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'receive',
-                'description' => "Pembelian diterima dan stok diperbarui",
-                'old_data' => ['status' => 'approved'],
-                'new_data' => ['status' => 'received'],
-                'user_id' => Auth::id()
-            ]);
+            // TransactionLog::create([
+            //     'transaction_id' => $purchase->id,
+            //     'transaction_type' => 'purchase',
+            //     'action' => 'receive',
+            //     'description' => "Pembelian diterima dan stok diperbarui",
+            //     'old_data' => ['status_pembelian' => 'approved'],
+            //     'new_data' => ['status_pembelian' => 'received'],
+            //     'user_id' => Auth::id()
+            // ]);
 
             DB::commit();
 
@@ -314,23 +289,23 @@ class PurchaseController extends Controller
 
     public function destroy(Purchase $purchase)
     {
-        if ($purchase->status !== 'draft') {
+        if ($purchase->status_pembelian !== 'draft') {
             return redirect()->back()->with('error', 'Pembelian tidak dapat dihapus karena status bukan draft');
         }
 
         try {
             DB::beginTransaction();
 
-            // Log penghapusan pembelian
-            TransactionLog::create([
-                'transaction_id' => $purchase->id,
-                'transaction_type' => 'purchase',
-                'action' => 'delete',
-                'description' => "Pembelian dihapus",
-                'old_data' => $purchase->toArray(),
-                'new_data' => null,
-                'user_id' => Auth::id()
-            ]);
+            // // Log penghapusan pembelian
+            // TransactionLog::create([
+            //     'transaction_id' => $purchase->id,
+            //     'transaction_type' => 'purchase',
+            //     'action' => 'delete',
+            //     'description' => "Pembelian dihapus",
+            //     'old_data' => $purchase->toArray(),
+            //     'new_data' => null,
+            //     'user_id' => Auth::id()
+            // ]);
 
             $purchase->details()->delete();
             $purchase->delete();
@@ -349,17 +324,17 @@ class PurchaseController extends Controller
     {
         $prefix = 'PO';
         $date = now()->format('Ymd');
-        $lastPurchase = Purchase::where('invoice_number', 'like', "{$prefix}{$date}%")
-            ->orderBy('invoice_number', 'desc')
+        $lastPurchase = Purchase::where('nomor_pembelian', 'like', "{$prefix}{$date}%")
+            ->orderBy('nomor_pembelian', 'desc')
             ->first();
 
         if ($lastPurchase) {
-            $lastNumber = (int) substr($lastPurchase->invoice_number, -4);
-            $newNumber = $lastNumber + 1;
+            $lastNumber = (int) substr($lastPurchase->nomor_pembelian, -4);
+            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
-            $newNumber = 1;
+            $newNumber = '0001';
         }
 
-        return $prefix . $date . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+        return "{$prefix}{$date}{$newNumber}";
     }
 } 

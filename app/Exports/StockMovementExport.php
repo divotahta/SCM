@@ -38,7 +38,7 @@ class StockMovementExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $history->created_at->format('d/m/Y H:i'),
-            $history->product->name,
+            $history->produk->nama_produk,
             $history->type == 'addition' ? 'Penambahan' : 'Pengurangan',
             $history->quantity,
             $history->old_stock,

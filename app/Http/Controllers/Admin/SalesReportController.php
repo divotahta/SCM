@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\PDF;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
-use App\Models\Order;
+use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Customer;
@@ -24,7 +24,7 @@ class SalesReportController extends Controller
         $period = $request->period ?? 'monthly';
 
         // Query dasar
-        $query = Order::with(['customer', 'details.product.category'])
+        $query = Transaction::with(['customer', 'details.product.category'])
             ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', 'completed');
 

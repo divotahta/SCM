@@ -32,18 +32,13 @@ class Product extends Model
         return $this->hasMany(PurchaseDetail::class, 'produk_id');
     }
 
-    public function orderDetails()
-    {
-        return $this->hasMany(OrderDetail::class, 'produk_id');
-    }
-
     public function stockHistories()
     {
         return $this->hasMany(StockHistory::class);
     }
 
     public function transactionDetails()
-{
-    return $this->hasMany(TransactionDetail::class);
-}
+    {
+        return $this->hasMany(TransactionDetail::class);
+    }
 } 

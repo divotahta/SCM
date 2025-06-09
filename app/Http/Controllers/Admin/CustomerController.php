@@ -85,12 +85,12 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        $orders = $customer->orders()
+        $transactions = $customer->transactions()
             ->with(['details.product'])
             ->latest()
             ->paginate(10);
 
-        return view('admin.customers.show', compact('customer', 'orders'));
+        return view('admin.customers.show', compact('customer', 'transactions'));
     }
 
     public function edit(Customer $customer)
@@ -103,9 +103,9 @@ class CustomerController extends Controller
         $request->validate([
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:customers,email,' . $customer->id,
-            'telepon' => 'required|string|max:20',
-            'alamat' => 'required|string',
-            'jenis' => 'required|string|in:perorangan,perusahaan',
+            'telepon' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'jenis' => 'nullable|string|in:perorangan,perusahaan',
             'nama_bank' => 'nullable|string|max:255',
             'pemegang_rekening' => 'nullable|string|max:255',
             'nomor_rekening' => 'nullable|string|max:255',
@@ -135,8 +135,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        if ($customer->orders()->exists()) {
-            return back()->with('error', 'Pelanggan tidak dapat dihapus karena memiliki pesanan');
+        if ($customer->transactions()->exists()) {
+            return back()->with('error', 'Pelanggan tidak dapat dihapus karena memiliki transaksi');
         }
 
         // Hapus foto jika ada

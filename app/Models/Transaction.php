@@ -15,7 +15,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'kode_transaksi',
-        'customer_id',
+        'pelanggan_id',
         'user_id',
         'total_harga',
         'total_bayar',
@@ -60,7 +60,7 @@ class Transaction extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'pelanggan_id');
     }
 
     public function user()
@@ -78,37 +78,5 @@ class Transaction extends Model
         return $this->belongsToMany(Product::class, 'detail_transaksi', 'transaksi_id', 'produk_id')
             ->withPivot('jumlah', 'harga', 'subtotal')
             ->withTimestamps();
-    }
-
-    public function logs()
-    {
-        return $this->hasMany(TransactionLog::class);
-    }
-
-    public function void()
-    {
-        if ($this->status !== 'completed') {
-            throw new \Exception('Hanya transaksi yang sudah selesai yang dapat dibatalkan');
-        }
-
-        DB::transaction(function () {
-            // Kembalikan stok
-            foreach ($this->details as $detail) {
-                $product = $detail->product;
-                $product->increment('stock', $detail->quantity);
-            }
-
-            // Update status transaksi
-            $this->update(['status' => 'void']);
-
-            // Log aktivitas
-            $this->logs()->create([
-                'user_id' => Auth::id(),
-                'action' => 'void',
-                'description' => 'Transaksi dibatalkan',
-                'old_data' => ['status' => 'completed'],
-                'new_data' => ['status' => 'void']
-            ]);
-        });
     }
 } 

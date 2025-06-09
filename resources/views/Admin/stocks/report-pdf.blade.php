@@ -59,7 +59,7 @@
             @foreach($histories as $history)
                 <tr>
                     <td>{{ $history->created_at->format('d/m/Y H:i') }}</td>
-                    <td>{{ $history->product->name }}</td>
+                    <td>{{ $history->produk->nama_produk }}</td>
                     <td>
                         @if($history->type == 'in')
                             Masuk
@@ -69,7 +69,7 @@
                             Penyesuaian
                         @endif
                     </td>
-                    <td>{{ $history->quantity }} {{ $history->product->unit->name }}</td>
+                    <td>{{ $history->quantity }} {{ $history->produk->unit->nama }}</td>
                     <td>
                         @if($history->reference_type == 'purchase')
                             Pembelian #{{ $history->reference_id }}

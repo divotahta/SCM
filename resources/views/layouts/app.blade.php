@@ -45,15 +45,15 @@
                                         <button @click="open = !open" class="w-full flex items-center justify-between bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
                                             <div class="flex items-center">
                                                 <i class="fas fa-shopping-cart mr-4"></i>
-                                                Pesanan
+                                                Transaksi
                                             </div>
                                             <i class="fas fa-chevron-down transition-transform" :class="{ 'transform rotate-180': open }"></i>
                                         </button>
                                         <div x-show="open" class="mt-2 space-y-1 pl-4">
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pesanan</a>
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Tertunda</a>
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Lengkap</a>
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pembayaran Tertunda</a>
+                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pesanan</a>
+                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Tertunda</a>
+                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Lengkap</a>
+                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pembayaran Tertunda</a>
                                         </div>
                                     </div>
 
@@ -67,9 +67,9 @@
                                             <i class="fas fa-chevron-down transition-transform" :class="{ 'transform rotate-180': open }"></i>
                                         </button>
                                         <div x-show="open" class="mt-2 space-y-1 pl-4">
-                                            <a href="{{ route('admin.orders.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pembelian</a>
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Proses Persetujuan</a>
-                                            <a href="#" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Laporan Pembelian</a>
+                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pembelian</a>
+                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Proses Persetujuan</a>
+                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Laporan Pembelian</a>
                                         </div>
                                     </div>
 
@@ -88,7 +88,7 @@
                                     <!-- Catatan Pelanggan -->
                                     <a href="{{ route('admin.customers.index') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
                                         <i class="fas fa-users mr-4"></i>
-                                        Catatan Pelanggan
+                                        Manajemen Pelanggan
                                     </a>
 
                                     <!-- Manajemen Pemasok -->
@@ -221,10 +221,9 @@
             });
         </script>
 
-        @push('scripts')
         <script>
-            function updateOrderCounts() {
-                fetch('{{ route("admin.orders.counts") }}')
+            function updateTransactionCounts() {
+                fetch('{{ route("admin.transactions.counts") }}')
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('pendingCount').textContent = data.pending;
@@ -233,11 +232,10 @@
             }
 
             // Update counts every 5 minutes
-            setInterval(updateOrderCounts, 300000);
+            setInterval(updateTransactionCounts, 300000);
             
             // Initial update
-            updateOrderCounts();
+            updateTransactionCounts();
         </script>
-        @endpush
     </body>
 </html>

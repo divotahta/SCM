@@ -208,7 +208,6 @@
         </div>
     </div>
 
-    @push('scripts')
         <script>
             function openAdjustModal(productId, productName, currentStock) {
                 document.getElementById('adjustForm').action = `/admin/stocks/${productId}/adjust`;
@@ -234,5 +233,4 @@
                 }
             });
         </script>
-    @endpush
 </x-app-layout>

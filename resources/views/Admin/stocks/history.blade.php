@@ -4,15 +4,15 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Riwayat Stok') }}
             </h2>
-            <a href="{{ route('admin.stocks.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400 focus:bg-gray-400 active:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                Kembali
-            </a>
         </div>
     </x-slot>
 
-    <div class="py-12">
+    
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <a href="{{ route('admin.stocks.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400 focus:bg-gray-400 active:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                    Kembali
+                </a>
                 <div class="p-6 text-gray-900">
                     <!-- Filter -->
                     <form action="{{ route('admin.stocks.history') }}" method="GET" class="mb-6">
@@ -89,7 +89,7 @@
                                             {{ $history->created_at->format('d/m/Y H:i') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $history->product->nama_produk }}
+                                            {{ $history->produk->nama_produk }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -98,19 +98,19 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $history->quantity }}
+                                            {{ $history->jumlah }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $history->old_stock }}
+                                            {{ $history->stok_lama }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $history->new_stock }}
+                                            {{ $history->stok_baru }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900">
-                                            {{ $history->description }}
+                                            {{ $history->keterangan }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                            {{ $history->user->name }}
+                                            {{ $history->user->nama }}
                                         </td>
                                     </tr>
                                 @empty

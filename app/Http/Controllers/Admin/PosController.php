@@ -65,7 +65,7 @@ class PosController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.harga' => 'required|numeric|min:0',
             'items.*.subtotal' => 'required|numeric|min:0',
-            'pelanggan_id' => 'nullable|exists:customers,id',
+            'pelanggan_id' => 'required|exists:customers,id',
             'total_harga' => 'required|numeric|min:0',
             'total_bayar' => 'required|numeric|min:0',
             'total_kembali' => 'required|numeric|min:0',
@@ -230,12 +230,28 @@ class PosController extends Controller
             'items.*.id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
             'payment_method' => 'required|in:cash,card,qris',
-            'customer_id' => 'nullable|exists:customers,id',
-            'amount_paid' => 'required|numeric|min:0'
+            'amount_paid' => 'required|numeric|min:0',
+            'notes' => 'nullable|string'
         ]);
 
         try {
             DB::beginTransaction();
+
+            // Handle pelanggan
+            $pelangganId = null;
+            if (isset($request->pelanggan)) {
+                // Buat pelanggan baru
+                $pelanggan = Customer::create([
+                    'nama' => $request->pelanggan['nama'],
+                    'telepon' => $request->pelanggan['telepon'] ?? null,
+                    'alamat' => $request->pelanggan['alamat'] ?? null,
+                    'total_pembelian' => 0,
+                    'level' => 'bronze'
+                ]);
+                $pelangganId = $pelanggan->id;
+            } else {
+                $pelangganId = $request->pelanggan_id;
+            }
 
             // Hitung total
             $subtotal = 0;
@@ -249,30 +265,32 @@ class PosController extends Controller
             $tax = $subtotal * 0.11;
             $total = $subtotal + $tax;
 
-            // Validasi jumlah pembayaran
+            // Validasi jumlah bayar
             if ($request->amount_paid < $total) {
-                throw new \Exception('Jumlah pembayaran kurang');
+                throw new \Exception("Jumlah bayar kurang dari total");
             }
 
-            // Buat transaksi baru
+            // Buat transaksi
             $transaction = Transaction::create([
                 'kode_transaksi' => 'TRX-' . date('YmdHis') . rand(100, 999),
-                'pelanggan_id' => $request->customer_id,
+                'pelanggan_id' => $pelangganId,
+                'user_id' => Auth::id(),
                 'total_harga' => $total,
                 'total_bayar' => $request->amount_paid,
                 'total_kembali' => $request->amount_paid - $total,
                 'metode_pembayaran' => $request->payment_method,
                 'status' => 'selesai',
-                'catatan' => $request->note
+                'catatan' => $request->notes
             ]);
 
-            // Simpan detail transaksi
+            // Simpan detail transaksi dan update stok
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['id']);
                 
+                // Buat detail transaksi
                 TransactionDetail::create([
                     'transaksi_id' => $transaction->id,
-                    'produk_id' => $product->id,
+                    'produk_id' => $item['id'],
                     'jumlah' => $item['quantity'],
                     'harga' => $product->harga_jual,
                     'subtotal' => $product->harga_jual * $item['quantity']
@@ -287,16 +305,16 @@ class PosController extends Controller
                     'produk_id' => $product->id,
                     'jenis' => 'keluar',
                     'jumlah' => $item['quantity'],
-                    'stok_lama' => $product->stok,
-                    'stok_baru' => $product->stok - $item['quantity'],
+                    'stok_lama' => $product->stok + $item['quantity'], // stok sebelum dikurangi
+                    'stok_baru' => $product->stok, // stok setelah dikurangi
                     'keterangan' => 'Penjualan POS',
                     'dibuat_oleh' => Auth::id()
                 ]);
             }
 
             // Update data pelanggan jika ada
-            if ($request->customer_id) {
-                $customer = Customer::find($request->customer_id);
+            if ($pelangganId) {
+                $customer = Customer::find($pelangganId);
                 $customer->total_pembelian += $total;
                 $customer->updateLoyaltyLevel();
                 $customer->addPoints($total);

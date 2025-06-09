@@ -11,14 +11,18 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('email')->unique();
-            $table->string('telepon');
-            $table->text('alamat');
-            $table->string('jenis');
+            $table->string('email')->unique()->nullable();
+            $table->string('telepon')->nullable();
+            $table->text('alamat')->nullable();
+            $table->string('jenis')->nullable();
             $table->string('nama_bank')->nullable();
             $table->string('pemegang_rekening')->nullable();
             $table->string('nomor_rekening')->nullable();
             $table->string('foto')->nullable();
+            $table->decimal('total_pembelian', 12, 2)->default(0);
+            $table->enum('loyalty_level', ['bronze', 'silver', 'gold', 'platinum'])->default('bronze');
+            $table->integer('points')->default(0);
+            $table->timestamp('last_purchase_at')->nullable();
             $table->timestamps();
         });
     }

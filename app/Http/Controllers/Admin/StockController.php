@@ -46,9 +46,9 @@ class StockController extends Controller
 
     public function history(Request $request)
     {
-        $query = StockHistory::with(['product', 'user'])
+        $query = StockHistory::with(['produk', 'user'])
             ->when($request->search, function($q) use ($request) {
-                return $q->whereHas('product', function($q) use ($request) {
+                return $q->whereHas('produk', function($q) use ($request) {
                     $q->where('nama_produk', 'like', "%{$request->search}%")
                         ->orWhere('kode_produk', 'like', "%{$request->search}%");
                 });

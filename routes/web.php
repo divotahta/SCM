@@ -11,10 +11,10 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Owner\PurchaseController;
 use App\Http\Controllers\Owner\DashboardController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\Admin\SalesReportController;
+use App\Http\Controllers\Admin\TransactionsController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\PurchaseReportController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -22,14 +22,21 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Admin\PurchaseController as AdminPurchaseController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\TransactionController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -99,17 +106,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/pos/void/{id}', [PosController::class, 'voidTransaction'])->name('pos.void');
     Route::get('/pos/status/{id}', [PosController::class, 'getTransactionStatus'])->name('pos.status');
 
-    // Order Management
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-    Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
-    Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
-    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
-    Route::get('/orders/export/excel', [OrderController::class, 'exportExcel'])->name('orders.export.excel');
-    Route::get('/orders/export/pdf', [OrderController::class, 'exportPdf'])->name('orders.export.pdf');
-    Route::get('/orders/counts', [OrderController::class, 'getOrderCounts'])->name('orders.counts');
+    // Transaction Management
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+    Route::get('/transactions/{transaction}/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
+    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::get('/transactions/export/excel', [TransactionController::class, 'exportExcel'])->name('transactions.export.excel');
+    Route::get('/transactions/export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
+    Route::get('/transactions/counts', [TransactionController::class, 'getTransactionCounts'])->name('transactions.counts');
+    Route::get('/transactions/print/{transaction}', [TransactionController::class, 'printStruk'])->name('transactions.print');
 
     // Stock Management
     Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
@@ -146,16 +154,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('customers/broadcast', [CustomerController::class, 'broadcast'])->name('customers.broadcast');
 
     //purchase
-    Route::get('purchases', [PurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::post('purchases', [PurchaseController::class, 'store'])->name('purchases.store');
-    Route::get('purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
-    Route::get('purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
-    Route::put('purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
-    Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
-    Route::post('purchases/import', [PurchaseController::class, 'import'])->name('purchases.import');
-    Route::get('purchases/export', [PurchaseController::class, 'export'])->name('purchases.export');
-    Route::post('purchases/broadcast', [PurchaseController::class, 'broadcast'])->name('purchases.broadcast');
+    Route::get('purchases', [AdminPurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('purchases/create', [AdminPurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('purchases', [AdminPurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('purchases/{purchase}', [AdminPurchaseController::class, 'show'])->name('purchases.show');
+    Route::get('purchases/{purchase}/edit', [AdminPurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::put('purchases/{purchase}', [AdminPurchaseController::class, 'update'])->name('purchases.update');
+    Route::delete('purchases/{purchase}', [AdminPurchaseController::class, 'destroy'])->name('purchases.destroy');
+    Route::post('purchases/import', [AdminPurchaseController::class, 'import'])->name('purchases.import');
+    Route::get('purchases/export', [AdminPurchaseController::class, 'export'])->name('purchases.export');
+    Route::post('purchases/broadcast', [AdminPurchaseController::class, 'broadcast'])->name('purchases.broadcast');
 
     // Supplier Management
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
