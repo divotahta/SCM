@@ -1,0 +1,142 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Models\Supplier;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
+use App\Imports\SuppliersImport;
+use App\Exports\SuppliersExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\PDF;
+
+class SupplierController extends Controller
+{
+    public function index()
+    {
+        $suppliers = Supplier::latest()->paginate(10);
+        return view('admin.suppliers.index', compact('suppliers'));
+    }
+
+    public function create()
+    {
+        return view('admin.suppliers.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:suppliers,email',
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'required|string',
+            'nama_toko' => 'required|string|max:255',
+            'jenis' => 'required|string|in:retail,grosir,distributor',
+            'nama_bank' => 'nullable|string|max:255',
+            'pemegang_rekening' => 'nullable|string|max:255',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $fotoPath = $foto->store('suppliers', 'public');
+            $data['foto'] = $fotoPath;
+        }
+
+        Supplier::create($data);
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Pemasok berhasil ditambahkan');
+    }
+
+    public function show(Supplier $supplier)
+    {
+        return view('admin.suppliers.show', compact('supplier'));
+    }
+
+    public function edit(Supplier $supplier)
+    {
+        return view('admin.suppliers.edit', compact('supplier'));
+    }
+
+    public function update(Request $request, Supplier $supplier)
+    {
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:suppliers,email,' . $supplier->id,
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'required|string',
+            'nama_toko' => 'required|string|max:255',
+            'jenis' => 'required|string|in:retail,grosir,distributor',
+            'nama_bank' => 'nullable|string|max:255',
+            'pemegang_rekening' => 'nullable|string|max:255',
+            'nomor_rekening' => 'nullable|string|max:50',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada
+            if ($supplier->foto) {
+                Storage::disk('public')->delete($supplier->foto);
+            }
+            
+            $foto = $request->file('foto');
+            $fotoPath = $foto->store('suppliers', 'public');
+            $data['foto'] = $fotoPath;
+        }
+
+        $supplier->update($data);
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Data pemasok berhasil diperbarui');
+    }
+
+    public function destroy(Supplier $supplier)
+    {
+        if ($supplier->foto) {
+            Storage::disk('public')->delete($supplier->foto);
+        }
+        
+        $supplier->delete();
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Pemasok berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        Excel::import(new SuppliersImport, $request->file('file'));
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Data pemasok berhasil diimpor');
+    }
+
+    public function export()
+    {
+        return Excel::download(new SuppliersExport, 'suppliers.xlsx');
+    }
+
+    public function broadcast(Request $request)
+    {
+        $request->validate([
+            'message' => 'required|string',
+            'suppliers' => 'required|array'
+        ]);
+
+        // Implementasi broadcast message ke pemasok
+        // Bisa menggunakan email, SMS, atau WhatsApp
+
+        return redirect()->route('admin.suppliers.index')
+            ->with('success', 'Pesan berhasil dikirim ke pemasok yang dipilih');
+    }
+} 
