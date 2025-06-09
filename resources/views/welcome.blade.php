@@ -45,8 +45,8 @@
     <section class="hero-bg pt-24 pb-16">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
             <div class="flex-1 text-center md:text-left">
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Satu Solusi Untuk Semua Kebutuhan Supply Chain Anda</h1>
-                <p class="text-blue-100 text-lg mb-6">Kelola inventori, transaksi, pemasok, dan pelanggan dengan mudah dan efisien bersama SCM Omahkulos.</p>
+                <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Satu Solusi Untuk Semua Kebutuhan Supply Chain</h1>
+                <p class="text-blue-100 text-lg mb-6">SCM Omahkulos adalah bisnis cafe yang menggunakan solusi terpadu untuk manajemen supply chain modern.</p>
                 <a href="{{ route('register') }}" class="inline-block bg-white text-blue-700 font-bold px-8 py-3 rounded-lg shadow hover:bg-blue-50 transition">Mulai Sekarang</a>
             </div>
             <div class="flex-1 flex justify-center">
