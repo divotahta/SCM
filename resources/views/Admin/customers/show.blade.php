@@ -32,11 +32,6 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $customer->email }}</p>
-                        </div>
-
-                        <div>
                             <label class="block text-sm font-medium text-gray-700">Telepon</label>
                             <p class="mt-1 text-sm text-gray-900">{{ $customer->telepon }}</p>
                         </div>
@@ -46,29 +41,25 @@
                             <p class="mt-1 text-sm text-gray-900">{{ $customer->alamat }}</p>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Jenis</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ ucfirst($customer->jenis) }}</p>
-                        </div>
                     </div>
 
                     <!-- Informasi Bank -->
                     <div class="space-y-6">
-                        <h3 class="text-lg font-medium text-gray-900">Informasi Bank</h3>
+                        <h3 class="text-lg font-medium text-gray-900">Informasi Loyalty</h3>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nama Bank</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $customer->nama_bank ?? '-' }}</p>
+                            <label class="block text-sm font-medium text-gray-700">Level Loyalty</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ ucfirst($customer->loyalty_level) }}</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Pemegang Rekening</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $customer->pemegang_rekening ?? '-' }}</p>
+                            <label class="block text-sm font-medium text-gray-700">Total Pembelian</label>
+                            <p class="mt-1 text-sm text-gray-900">Rp. {{ number_format($customer->total_pembelian, 0, ',', '.') }}</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Nomor Rekening</label>
-                            <p class="mt-1 text-sm text-gray-900">{{ $customer->nomor_rekening ?? '-' }}</p>
+                            <label class="block text-sm font-medium text-gray-700">Poin</label>
+                            <p class="mt-1 text-sm text-gray-900">{{ $customer->points }} Poin</p>
                         </div>
 
                         <div>

@@ -246,7 +246,8 @@ class PosController extends Controller
                     'telepon' => $request->pelanggan['telepon'] ?? null,
                     'alamat' => $request->pelanggan['alamat'] ?? null,
                     'total_pembelian' => 0,
-                    'level' => 'bronze'
+                    'loyalty_level' => 'bronze',
+                    'points' => 0
                 ]);
                 $pelangganId = $pelanggan->id;
             } else {

@@ -29,37 +29,31 @@
                                 <!-- Menu Admin -->
                                 @if(auth()->user()->role === 'admin')
                                     <!-- Dashboard -->
-                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center bg-blue-100 rounded-xl font-bold text-sm text-blue-900 py-3 px-4">
+                                    <a href="{{ route('admin.dashboard') }}" class="flex items-center {{ request()->routeIs('admin.dashboard') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-home mr-4"></i>
                                         Dashboard
                                     </a>
 
                                     <!-- POS -->
-                                    <a href="{{ route('admin.pos') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('admin.pos') }}" class="flex items-center {{ request()->routeIs('admin.pos') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-cash-register mr-4"></i>
                                         POS
                                     </a>
 
-                                    <!-- Pesanan Dropdown -->
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @click="open = !open" class="w-full flex items-center justify-between bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <!-- Transaksi Dropdown -->
+                                    <div x-data="{ open: {{ request()->routeIs('admin.transactions.*') ? 'true' : 'false' }} }" class="relative">
+                                        <button @click="open = !open" class="w-full flex items-center justify-between {{ request()->routeIs('admin.transactions.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                             <div class="flex items-center">
                                                 <i class="fas fa-shopping-cart mr-4"></i>
                                                 Transaksi
                                             </div>
-                                            <i class="fas fa-chevron-down transition-transform" :class="{ 'transform rotate-180': open }"></i>
                                         </button>
-                                        <div x-show="open" class="mt-2 space-y-1 pl-4">
-                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pesanan</a>
-                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Tertunda</a>
-                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pesanan Lengkap</a>
-                                            <a href="{{ route('admin.transactions.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Pembayaran Tertunda</a>
-                                        </div>
+                                       
                                     </div>
 
                                     <!-- Pembelian Dropdown -->
-                                    <div x-data="{ open: false }" class="relative">
-                                        <button @click="open = !open" class="w-full flex items-center justify-between bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <div x-data="{ open: {{ request()->routeIs('admin.purchases.*') ? 'true' : 'false' }} }" class="relative">
+                                        <button @click="open = !open" class="w-full flex items-center justify-between {{ request()->routeIs('admin.purchases.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                             <div class="flex items-center">
                                                 <i class="fas fa-shopping-basket mr-4"></i>
                                                 Pembelian
@@ -67,32 +61,32 @@
                                             <i class="fas fa-chevron-down transition-transform" :class="{ 'transform rotate-180': open }"></i>
                                         </button>
                                         <div x-show="open" class="mt-2 space-y-1 pl-4">
-                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Semua Pembelian</a>
-                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Proses Persetujuan</a>
-                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm text-gray-600 hover:text-blue-600 py-2">Laporan Pembelian</a>
+                                            <a href="{{ route('admin.purchases.index') }}" class="block text-sm {{ request()->routeIs('admin.purchases.index') ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600' }} py-2">Semua Pembelian</a>
+                                            <a href="{{ route('admin.purchases.index', ['status' => 'pending']) }}" class="block text-sm {{ request()->routeIs('admin.purchases.index') && request()->status === 'pending' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600' }} py-2">Proses Persetujuan</a>
+                                            <a href="{{ route('admin.purchases.index', ['status' => 'completed']) }}" class="block text-sm {{ request()->routeIs('admin.purchases.index') && request()->status === 'completed' ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600' }} py-2">Laporan Pembelian</a>
                                         </div>
                                     </div>
 
                                     <!-- Manajemen Produk -->
-                                    <a href="{{ route('admin.products.index') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('admin.products.index') }}" class="flex items-center {{ request()->routeIs('admin.products.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-box mr-4"></i>
                                         Manajemen Produk
                                     </a>
 
                                     <!-- Manajemen Stok -->
-                                    <a href="{{ route('admin.stocks.index') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('admin.stocks.index') }}" class="flex items-center {{ request()->routeIs('admin.stocks.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-box mr-4"></i>
                                         Manajemen Stok
                                     </a>
 
-                                    <!-- Catatan Pelanggan -->
-                                    <a href="{{ route('admin.customers.index') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <!-- Manajemen Pelanggan -->
+                                    <a href="{{ route('admin.customers.index') }}" class="flex items-center {{ request()->routeIs('admin.customers.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-users mr-4"></i>
                                         Manajemen Pelanggan
                                     </a>
 
                                     <!-- Manajemen Pemasok -->
-                                    <a href="{{ route('admin.suppliers.index') }}" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('admin.suppliers.index') }}" class="flex items-center {{ request()->routeIs('admin.suppliers.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-user-tie mr-4"></i>
                                         Manajemen Pemasok
                                     </a>
@@ -100,31 +94,31 @@
                                 <!-- Menu Owner -->
                                 @else
                                     <!-- Dashboard -->
-                                    <a href="{{ route('owner.dashboard') }}" class="flex items-center bg-blue-100 rounded-xl font-bold text-sm text-blue-900 py-3 px-4">
+                                    <a href="{{ route('owner.dashboard') }}" class="flex items-center {{ request()->routeIs('owner.dashboard') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-home mr-4"></i>
                                         Dashboard
                                     </a>
 
                                     <!-- Laporan Pembelian -->
-                                    <a href="" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('owner.purchases.report') }}" class="flex items-center {{ request()->routeIs('owner.purchases.report') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-file-invoice mr-4"></i>
                                         Laporan Pembelian
                                     </a>
 
                                     <!-- Manajemen Produk -->
-                                    <a href="#" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('owner.products.index') }}" class="flex items-center {{ request()->routeIs('owner.products.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-box mr-4"></i>
                                         Manajemen Produk
                                     </a>
 
-                                    <!-- Catatan Pelanggan -->
-                                    <a href="#" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <!-- Manajemen Pelanggan -->
+                                    <a href="{{ route('owner.customers.index') }}" class="flex items-center {{ request()->routeIs('owner.customers.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-users mr-4"></i>
-                                        Catatan Pelanggan
+                                        Manajemen Pelanggan
                                     </a>
 
                                     <!-- Manajemen Pemasok -->
-                                    <a href="#" class="flex bg-white hover:bg-blue-50 rounded-xl font-bold text-sm text-gray-900 py-3 px-4">
+                                    <a href="{{ route('owner.suppliers.index') }}" class="flex items-center {{ request()->routeIs('owner.suppliers.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
                                         <i class="fas fa-user-tie mr-4"></i>
                                         Manajemen Pemasok
                                     </a>
@@ -153,7 +147,7 @@
                         <nav class="flex" aria-label="Breadcrumb">
                             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                                 <li class="inline-flex items-center">
-                                    <a href="#" class="text-gray-700 hover:text-blue-600">
+                                    <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : route('owner.dashboard') }}" class="text-gray-700 hover:text-blue-600">
                                         <i class="fas fa-home mr-2"></i>
                                         Home
                                     </a>
@@ -181,9 +175,9 @@
                     </div>
                 </header>
 
-            <!-- Page Content -->
+                <!-- Page Content -->
                 <div class="bg-white rounded-xl shadow-sm p-6">
-                {{ $slot }}
+                    {{ $slot }}
                 </div>
 
                 <!-- Footer -->
@@ -219,23 +213,6 @@
                     sidebar.classList.add('-translate-x-full');
                 }
             });
-        </script>
-
-        <script>
-            function updateTransactionCounts() {
-                fetch('{{ route("admin.transactions.counts") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('pendingCount').textContent = data.pending;
-                        document.getElementById('unpaidCount').textContent = data.unpaid;
-                    });
-            }
-
-            // Update counts every 5 minutes
-            setInterval(updateTransactionCounts, 300000);
-            
-            // Initial update
-            updateTransactionCounts();
         </script>
     </body>
 </html>

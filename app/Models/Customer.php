@@ -11,13 +11,8 @@ class Customer extends Model
 
     protected $fillable = [
         'nama',
-        'email',
         'telepon',
         'alamat',
-        'jenis',
-        'nama_bank',
-        'pemegang_rekening',
-        'nomor_rekening',
         'foto',
         'total_pembelian',
         'loyalty_level',

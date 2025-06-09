@@ -22,14 +22,8 @@ class CustomerController extends Controller
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('nama', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%")
                     ->orWhere('telepon', 'like', "%{$request->search}%");
             });
-        }
-
-        // Filter
-        if ($request->filled('jenis')) {
-            $query->where('jenis', $request->jenis);
         }
 
         // Sort
@@ -50,13 +44,8 @@ class CustomerController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:customers',
             'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'jenis' => 'nullable|string|in:perorangan,perusahaan',
-            'nama_bank' => 'nullable|string|max:255',
-            'pemegang_rekening' => 'nullable|string|max:255',
-            'nomor_rekening' => 'nullable|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
@@ -102,13 +91,8 @@ class CustomerController extends Controller
     {
         $request->validate([
             'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email,' . $customer->id,
             'telepon' => 'nullable|string|max:20',
             'alamat' => 'nullable|string',
-            'jenis' => 'nullable|string|in:perorangan,perusahaan',
-            'nama_bank' => 'nullable|string|max:255',
-            'pemegang_rekening' => 'nullable|string|max:255',
-            'nomor_rekening' => 'nullable|string|max:255',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 

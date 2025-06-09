@@ -31,15 +31,7 @@
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                     placeholder="Cari nama, email, atau telepon...">
                             </div>
-                            <div>
-                                <label for="jenis" class="block text-sm font-medium text-gray-700">Jenis</label>
-                                <select name="jenis" id="jenis"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">Semua Jenis</option>
-                                    <option value="perorangan" {{ request('jenis') == 'perorangan' ? 'selected' : '' }}>Perorangan</option>
-                                    <option value="perusahaan" {{ request('jenis') == 'perusahaan' ? 'selected' : '' }}>Perusahaan</option>
-                                </select>
-                            </div>
+                            
                             <div class="flex items-end">
                                 <button type="submit"
                                     class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -68,11 +60,11 @@
                                     </th>
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Jenis
+                                        Level Loyalty
                                     </th>
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Bank
+                                        Total Pembelian
                                     </th>
                                     <th scope="col"
                                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -105,27 +97,15 @@
                                                     <i class="fab fa-whatsapp"></i> {{ $customer->telepon }}
                                                 </a><br>
                                             @endif
-                                            @if($customer->email)
-                                                <a href="mailto:{{ $customer->email }}" 
-                                                    class="text-blue-600 hover:text-blue-900 transition duration-150 ease-in-out">
-                                                    <i class="fas fa-envelope"></i> {{ $customer->email }}
-                                                </a>
-                                            @endif
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                {{ $customer->jenis == 'perusahaan' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800' }}">
-                                                {{ ucfirst($customer->jenis) }}
+                                                {{ $customer->loyalty_level == 'bronze' ? 'bg-blue-100 text-bronze-800' : 'bg-green-100 text-green-800' }}">
+                                                {{ ucfirst($customer->loyalty_level) }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            @if($customer->nama_bank)
-                                                {{ $customer->nama_bank }}<br>
-                                                {{ $customer->pemegang_rekening }}<br>
-                                                {{ $customer->nomor_rekening }}
-                                            @else
-                                                -
-                                            @endif
+                                            Rp. {{ number_format($customer->total_pembelian, 0, ',', '.') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2">
