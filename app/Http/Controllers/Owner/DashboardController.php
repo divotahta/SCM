@@ -19,9 +19,9 @@ class DashboardController extends Controller
         $pendingPurchases = Purchase::where('status', 'pending')->get();
 
         // Ringkasan keuangan
-        $totalIncome = Order::where('status', 'completed')
+        $totalIncome = Order::where('status_pesanan', 'completed')
             ->whereMonth('created_at', Carbon::now()->month)
-            ->sum('total_amount');
+            ->sum('sub_total');
 
         $totalExpense = Purchase::where('status', 'approved')
             ->whereMonth('created_at', Carbon::now()->month)
@@ -35,10 +35,10 @@ class DashboardController extends Controller
         });
 
         $salesData = $months->map(function ($month) {
-            return Order::where('status', 'completed')
+            return Order::where('status_pesanan', 'completed')
                 ->whereMonth('created_at', $month->month)
                 ->whereYear('created_at', $month->year)
-                ->sum('total_amount');
+                ->sum('sub_total');
         });
 
         $purchaseData = $months->map(function ($month) {
@@ -54,11 +54,11 @@ class DashboardController extends Controller
 
         // Produk terlaris
         $topProducts = Product::select('products.*')
-            ->selectRaw('SUM(order_details.quantity) as total_sold')
-            ->selectRaw('SUM(order_details.quantity * order_details.price) as total_revenue')
-            ->join('order_details', 'products.id', '=', 'order_details.product_id')
-            ->join('orders', 'orders.id', '=', 'order_details.order_id')
-            ->where('orders.status', 'completed')
+            ->selectRaw('SUM(order_details.jumlah) as total_sold')
+            ->selectRaw('SUM(order_details.jumlah * order_details.harga_satuan) as total_revenue')
+            ->join('order_details', 'products.id', '=', 'order_details.produk_id')
+            ->join('orders', 'orders.id', '=', 'order_details.pesanan_id')
+            ->where('orders.status_pesanan', 'completed')
             ->whereMonth('orders.created_at', Carbon::now()->month)
             ->groupBy('products.id')
             ->orderByDesc('total_sold')
@@ -68,9 +68,9 @@ class DashboardController extends Controller
         // Pelanggan teratas
         $topCustomers = Customer::select('customers.*')
             ->selectRaw('COUNT(orders.id) as total_transactions')
-            ->selectRaw('SUM(orders.total_amount) as total_spent')
-            ->join('orders', 'customers.id', '=', 'orders.customer_id')
-            ->where('orders.status', 'completed')
+            ->selectRaw('SUM(orders.sub_total) as total_spent')
+            ->join('orders', 'customers.id', '=', 'orders.pelanggan_id')
+            ->where('orders.status_pesanan', 'completed')
             ->whereMonth('orders.created_at', Carbon::now()->month)
             ->groupBy('customers.id')
             ->orderByDesc('total_spent')

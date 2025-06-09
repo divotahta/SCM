@@ -1,112 +1,147 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Point of Sale') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left Column - Product Search & Cart -->
-                        <div class="lg:col-span-2">
-                            <!-- Product Search -->
-                            <div class="mb-6">
-                                <div class="relative">
-                                    <input type="text" id="product-search" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Cari produk (nama atau kode)...">
-                                    <div id="search-results" class="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg hidden">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cart -->
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h3 class="text-lg font-semibold mb-4">Keranjang</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead>
-                                            <tr>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="cart-items">
-                                            <!-- Cart items will be added here dynamically -->
-                                        </tbody>
-                                    </table>
-                                </div>
+    <div class="min-h-screen bg-gray-100">
+        <!-- Header -->
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Point of Sale</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" 
+                                   id="search" 
+                                   placeholder="Cari produk..." 
+                                   class="w-64 pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <div class="absolute left-3 top-2.5">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Right Column - Customer & Payment -->
-                        <div class="lg:col-span-1">
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <!-- Customer Selection -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Pelanggan</label>
-                                    <select id="customer-select" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                        <option value="">Pilih Pelanggan</option>
-                                    </select>
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Products Section -->
+                <div class="col-span-8">
+                    <!-- Categories -->
+                            <div class="mb-6">
+                        <div class="flex space-x-2 overflow-x-auto pb-2">
+                            <button class="category-button px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" 
+                                    data-category="all">
+                                Semua
+                            </button>
+                            @foreach($categories as $categoryName => $categoryProducts)
+                            <button class="category-button px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" 
+                                    data-category="{{ strtolower(str_replace(' ', '-', $categoryName)) }}">
+                                {{ $categoryName }}
+                            </button>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        @foreach($products as $product)
+                        <div class="product-card p-4 bg-white rounded-lg border hover:shadow-md transition-all duration-200" 
+                             data-category="{{ strtolower(str_replace(' ', '-', $product->category->nama_kategori)) }}">
+                            <div class="aspect-w-1 aspect-h-1 mb-3 bg-gray-100 rounded-lg overflow-hidden">
+                                @if($product->gambar)
+                                    <img src="{{ asset('storage/' . $product->gambar) }}" alt="{{ $product->nama_produk }}" class="w-full h-full object-cover">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                @endif
+                                </div>
+                            <h3 class="product-name text-lg font-medium text-gray-900 truncate">{{ $product->nama_produk }}</h3>
+                            <p class="mt-1 text-sm text-gray-500">{{ $product->category->nama_kategori }}</p>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span class="text-lg font-medium text-gray-900">Rp {{ number_format($product->harga_jual, 0, ',', '.') }}</span>
+                                <button onclick="addToCart({{ $product->id }}, '{{ addslashes($product->nama_produk) }}', {{ $product->harga_jual }}, {{ $product->stok }})" 
+                                        class="ml-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                                    + Keranjang
+                                </button>
+                            </div>
+                            <div class="mt-2 text-sm text-gray-500">
+                                Stok: {{ $product->stok }} {{ $product->unit->nama_unit }}
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
                                 </div>
 
-                                <!-- Payment Summary -->
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold mb-4">Ringkasan Pembayaran</h3>
-                                    <div class="space-y-2">
-                                        <div class="flex justify-between">
-                                            <span>Subtotal:</span>
-                                            <span id="subtotal">Rp 0</span>
+                <!-- Cart Section -->
+                <div class="col-span-4">
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                        <div class="p-4 border-b">
+                            <h2 class="text-lg font-semibold text-gray-900">Keranjang Belanja</h2>
                                         </div>
-                                        <div class="flex justify-between">
-                                            <span>PPN (11%):</span>
-                                            <span id="tax">Rp 0</span>
+
+                        <!-- Cart Items -->
+                        <div class="p-4 space-y-4 max-h-[calc(100vh-400px)] overflow-y-auto cart-items">
+                            <!-- Cart items will be updated via JavaScript -->
                                         </div>
-                                        <div class="flex justify-between font-semibold">
-                                            <span>Total:</span>
-                                            <span id="total">Rp 0</span>
+
+                        <!-- Cart Summary -->
+                        <div class="p-4 border-t bg-gray-50">
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Subtotal</span>
+                                    <span class="font-medium subtotal">Rp 0</span>
                                         </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">PPN (11%)</span>
+                                    <span class="font-medium tax">Rp 0</span>
+                                </div>
+                                <div class="flex justify-between text-lg font-semibold">
+                                    <span>Total</span>
+                                    <span class="total">Rp 0</span>
                                     </div>
                                 </div>
 
-                                <!-- Payment Method -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
-                                    <select id="payment-method" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                        <option value="cash">Cash</option>
-                                        <option value="transfer">Transfer</option>
+                            <!-- Payment Form -->
+                            <form id="checkoutForm" class="mt-4 space-y-4">
+                                @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Metode Pembayaran</label>
+                                    <select name="payment_method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="cash">Tunai</option>
+                                        <option value="card">Kartu</option>
                                         <option value="qris">QRIS</option>
                                     </select>
                                 </div>
 
-                                <!-- Payment Amount -->
-                                <div class="mb-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Jumlah Bayar</label>
-                                    <input type="number" id="payment-amount" 
-                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                                        placeholder="Masukkan jumlah bayar">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Pelanggan</label>
+                                    <select name="customer_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="">Umum</option>
+                                        @foreach($customers as $customer)
+                                            <option value="{{ $customer->id }}">{{ $customer->nama }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
-                                <!-- Change -->
-                                <div class="mb-6">
-                                    <div class="flex justify-between font-semibold">
-                                        <span>Kembalian:</span>
-                                        <span id="change">Rp 0</span>
-                                    </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Jumlah Bayar</label>
+                                    <input type="number" 
+                                           name="amount_paid" 
+                                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                                           step="0.01"
+                                           min="0"
+                                           required>
                                 </div>
 
-                                <!-- Process Button -->
-                                <button id="process-payment" 
-                                    class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                <button type="submit" 
+                                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
                                     Proses Pembayaran
                                 </button>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -114,233 +149,301 @@
         </div>
     </div>
 
-    <!-- Cart Item Template -->
-    <template id="cart-item-template">
-        <tr class="cart-item">
-            <td class="px-4 py-2">
-                <span class="product-name"></span>
-                <input type="hidden" class="product-id">
-            </td>
-            <td class="px-4 py-2">
-                <span class="product-price"></span>
-            </td>
-            <td class="px-4 py-2">
-                <div class="flex items-center space-x-2">
-                    <button class="decrease-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">-</button>
-                    <input type="number" class="product-qty w-16 text-center rounded border-gray-300" min="1">
-                    <button class="increase-qty px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">+</button>
-                </div>
-            </td>
-            <td class="px-4 py-2">
-                <span class="product-subtotal"></span>
-            </td>
-            <td class="px-4 py-2">
-                <button class="remove-item text-red-600 hover:text-red-800">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        </tr>
-    </template>
+    {{-- @push('styles') --}}
+    <style>
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .category-button.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        
+        .product-card {
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
 
-    @push('scripts')
+        /* Custom scrollbar */
+        .cart-items::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .cart-items::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .cart-items::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    {{-- @endpush --}}
+
+    {{-- @push('scripts') --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const cart = [];
-            const TAX_RATE = 0.11;
+        // Cart management
+        let cart = [];
 
-            // Load customers
-            fetch('/pos/customers')
-                .then(response => response.json())
-                .then(customers => {
-                    const select = document.getElementById('customer-select');
-                    customers.forEach(customer => {
-                        const option = document.createElement('option');
-                        option.value = customer.id;
-                        option.textContent = customer.name;
-                        select.appendChild(option);
-                    });
-                });
+        // Format currency function
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount).replace('IDR', 'Rp');
+        }
 
-            // Product search
-            const searchInput = document.getElementById('product-search');
-            const searchResults = document.getElementById('search-results');
-            let searchTimeout;
-
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                const query = this.value;
-
-                if (query.length < 2) {
-                    searchResults.classList.add('hidden');
+        // Define functions globally first
+        window.addToCart = function(productId, name, price, stock) {
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                if (existingItem.quantity >= stock) {
+                    alert('Stok tidak mencukupi!');
                     return;
                 }
-
-                searchTimeout = setTimeout(() => {
-                    fetch(`/pos/search-products?q=${encodeURIComponent(query)}`)
-                        .then(response => response.json())
-                        .then(products => {
-                            searchResults.innerHTML = '';
-                            products.forEach(product => {
-                                const div = document.createElement('div');
-                                div.className = 'p-2 hover:bg-gray-100 cursor-pointer';
-                                div.textContent = `${product.name} (${product.code}) - Rp ${formatNumber(product.price)}`;
-                                div.addEventListener('click', () => addToCart(product));
-                                searchResults.appendChild(div);
-                            });
-                            searchResults.classList.remove('hidden');
-                        });
-                }, 300);
-            });
-
-            // Add to cart
-            function addToCart(product) {
-                const existingItem = cart.find(item => item.id === product.id);
-                if (existingItem) {
                     existingItem.quantity++;
                 } else {
                     cart.push({
-                        id: product.id,
-                        name: product.name,
-                        price: product.price,
-                        quantity: 1
-                    });
-                }
-                updateCart();
-                searchInput.value = '';
-                searchResults.classList.add('hidden');
-            }
-
-            // Update cart
-            function updateCart() {
-                const tbody = document.getElementById('cart-items');
-                tbody.innerHTML = '';
-                const template = document.getElementById('cart-item-template');
-
-                cart.forEach((item, index) => {
-                    const clone = template.content.cloneNode(true);
-                    clone.querySelector('.product-name').textContent = item.name;
-                    clone.querySelector('.product-id').value = item.id;
-                    clone.querySelector('.product-price').textContent = `Rp ${formatNumber(item.price)}`;
-                    clone.querySelector('.product-qty').value = item.quantity;
-                    clone.querySelector('.product-subtotal').textContent = `Rp ${formatNumber(item.price * item.quantity)}`;
-
-                    // Quantity controls
-                    clone.querySelector('.decrease-qty').addEventListener('click', () => {
-                        if (item.quantity > 1) {
-                            item.quantity--;
-                            updateCart();
-                        }
-                    });
-
-                    clone.querySelector('.increase-qty').addEventListener('click', () => {
-                        item.quantity++;
-                        updateCart();
-                    });
-
-                    clone.querySelector('.product-qty').addEventListener('change', (e) => {
-                        const newQty = parseInt(e.target.value);
-                        if (newQty > 0) {
-                            item.quantity = newQty;
-                            updateCart();
-                        }
-                    });
-
-                    // Remove item
-                    clone.querySelector('.remove-item').addEventListener('click', () => {
-                        cart.splice(index, 1);
-                        updateCart();
-                    });
-
-                    tbody.appendChild(clone);
+                    id: productId,
+                    name: name,
+                    price: price,
+                    quantity: 1,
+                    stock: stock
                 });
+            }
+            
+            updateCart();
+        }
 
-                updateTotals();
+        // Remove from cart function
+        window.removeFromCart = function(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            updateCart();
+        }
+
+        // Update quantity function
+        window.updateQuantity = function(productId, newQuantity) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                if (newQuantity <= 0) {
+                    removeFromCart(productId);
+                } else if (newQuantity > item.stock) {
+                    alert('Stok tidak mencukupi!');
+                } else {
+                    item.quantity = newQuantity;
+                    updateCart();
+                }
+            }
+        }
+
+        // Update cart display
+            function updateCart() {
+            const cartContainer = document.querySelector('.cart-items');
+            const subtotalElement = document.querySelector('.subtotal');
+            const taxElement = document.querySelector('.tax');
+            const totalElement = document.querySelector('.total');
+            
+            // Update cart items display
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p class="text-gray-500 text-center py-4">Keranjang kosong</p>';
+            } else {
+                cartContainer.innerHTML = cart.map(item => `
+                    <div class="flex items-center justify-between p-3 bg-white rounded-lg border">
+                        <div class="flex-1">
+                            <h4 class="text-sm font-medium text-gray-900">${item.name}</h4>
+                            <p class="text-sm text-gray-500">${formatCurrency(item.price)} x ${item.quantity}</p>
+                            <p class="text-xs text-gray-400">Stok: ${item.stock}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
+                                    class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                </svg>
+                            </button>
+                            <span class="text-sm font-medium px-2">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
+                                    class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded"
+                                    ${item.quantity >= item.stock ? 'disabled title="Stok habis"' : ''}>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                            </button>
+                            <button onclick="removeFromCart(${item.id})" 
+                                    class="p-1 text-red-500 hover:text-red-700 hover:bg-red-100 rounded ml-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
             }
 
-            // Update totals
-            function updateTotals() {
-                const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const tax = subtotal * TAX_RATE;
-                const total = subtotal + tax;
+            // Calculate totals
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const tax = subtotal * 0.11;
+            const total = subtotal + tax;
 
-                document.getElementById('subtotal').textContent = `Rp ${formatNumber(subtotal)}`;
-                document.getElementById('tax').textContent = `Rp ${formatNumber(tax)}`;
-                document.getElementById('total').textContent = `Rp ${formatNumber(total)}`;
+            // Update total displays
+            subtotalElement.textContent = formatCurrency(subtotal);
+            taxElement.textContent = formatCurrency(tax);
+            totalElement.textContent = formatCurrency(total);
 
-                // Update change
-                const paymentAmount = parseFloat(document.getElementById('payment-amount').value) || 0;
-                const change = paymentAmount - total;
-                document.getElementById('change').textContent = `Rp ${formatNumber(Math.max(0, change))}`;
+            // Update amount paid input
+            const amountPaidInput = document.querySelector('input[name="amount_paid"]');
+            if (amountPaidInput && total > 0) {
+                amountPaidInput.value = total;
             }
 
-            // Payment amount change
-            document.getElementById('payment-amount').addEventListener('input', updateTotals);
+            // Update checkout button state
+            const checkoutButton = document.querySelector('#checkoutForm button[type="submit"]');
+            if (checkoutButton) {
+                checkoutButton.disabled = cart.length === 0;
+            }
+        }
 
-            // Process payment
-            document.getElementById('process-payment').addEventListener('click', function() {
-                const customerId = document.getElementById('customer-select').value;
-                const paymentMethod = document.getElementById('payment-method').value;
-                const paymentAmount = parseFloat(document.getElementById('payment-amount').value) || 0;
-                const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * (1 + TAX_RATE);
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('search');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const productCards = document.querySelectorAll('.product-card');
+                    
+                    productCards.forEach(card => {
+                        const productName = card.querySelector('.product-name');
+                        if (productName) {
+                            const name = productName.textContent.toLowerCase();
+                            card.style.display = name.includes(searchTerm) ? 'block' : 'none';
+                        }
+                    });
+                });
+            }
+        }
 
-                if (!customerId) {
-                    alert('Pilih pelanggan terlebih dahulu');
-                    return;
-                }
-
-                if (cart.length === 0) {
-                    alert('Keranjang masih kosong');
-                    return;
-                }
-
-                if (paymentAmount < total) {
-                    alert('Jumlah pembayaran kurang');
-                    return;
-                }
-
-                const data = {
-                    customer_id: customerId,
-                    payment_method: paymentMethod,
-                    payment_amount: paymentAmount,
-                    total: total,
-                    items: cart.map(item => ({
-                        id: item.id,
-                        quantity: item.quantity,
-                        price: item.price
-                    }))
-                };
-
-                fetch('/pos/process-transaction', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        window.open(`/pos/receipt/${result.transaction_id}`, '_blank');
-                        cart.length = 0;
-                        updateCart();
-                        document.getElementById('payment-amount').value = '';
-                        document.getElementById('customer-select').value = '';
-                    } else {
-                        alert(result.message || 'Terjadi kesalahan');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat memproses pembayaran');
+        // Category filter functionality
+        function initializeCategoryFilter() {
+            const categoryButtons = document.querySelectorAll('.category-button');
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active button
+                    categoryButtons.forEach(btn => btn.classList.remove('active', 'bg-blue-600', 'text-white'));
+                    categoryButtons.forEach(btn => btn.classList.add('bg-gray-100', 'text-gray-700'));
+                    
+                    this.classList.remove('bg-gray-100', 'text-gray-700');
+                    this.classList.add('active', 'bg-blue-600', 'text-white');
+                    
+                    // Filter products
+                    const category = this.dataset.category;
+                    const productCards = document.querySelectorAll('.product-card');
+                    
+                    productCards.forEach(card => {
+                        if (category === 'all' || card.dataset.category === category) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
                 });
             });
+        }
 
-            // Helper function to format numbers
-            function formatNumber(number) {
-                return number.toLocaleString('id-ID');
+        // Checkout form handling
+        function initializeCheckout() {
+            const checkoutForm = document.getElementById('checkoutForm');
+            if (checkoutForm) {
+                checkoutForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                if (cart.length === 0) {
+                        alert('Keranjang belanja kosong!');
+                    return;
+                }
+
+                    const formData = new FormData(this);
+                    const amountPaid = parseFloat(formData.get('amount_paid'));
+                    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.11;
+
+                    if (amountPaid < total) {
+                        alert('Jumlah bayar kurang dari total!');
+                    return;
+                }
+
+                    // Disable form during processing
+                    const submitButton = this.querySelector('button[type="submit"]');
+                    const originalText = submitButton.textContent;
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Memproses...';
+
+                    try {
+                        const response = await fetch('{{ route("admin.pos.checkout") }}', {
+                    method: 'POST',
+                    headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                items: cart,
+                                payment_method: formData.get('payment_method'),
+                                customer_id: formData.get('customer_id') || null,
+                                amount_paid: amountPaid
+                            })
+                        });
+
+                        const result = await response.json();
+
+                    if (result.success) {
+                            // Reset cart
+                            cart = [];
+                        updateCart();
+                            this.reset();
+
+                            // Show success message
+                            const change = result.data.paid - result.data.total;
+                            alert(`Transaksi berhasil!\nKode: ${result.data.code}\nTotal: ${formatCurrency(result.data.total)}\nBayar: ${formatCurrency(result.data.paid)}\nKembali: ${formatCurrency(change)}`);
+
+                            // Print receipt if route exists
+                            if (result.data.transaction_id) {
+                                const printUrl = '{{ url("admin/pos/receipt") }}/' + result.data.transaction_id;
+                                window.open(printUrl, '_blank');
+                            }
+                    } else {
+                            alert(result.message || 'Terjadi kesalahan saat memproses pembayaran');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat memproses pembayaran');
+                    } finally {
+                        // Re-enable form
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalText;
+                    }
+                });
             }
+        }
+
+        // Initialize all functionality when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSearch();
+            initializeCategoryFilter();
+            initializeCheckout();
+            updateCart(); // Initialize cart display
         });
     </script>
-    @endpush
+    {{-- @endpush --}}
 </x-app-layout> 

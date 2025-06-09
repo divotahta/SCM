@@ -1,115 +1,130 @@
-@extends('layouts.app')
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex justify-between items-center">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Riwayat Stok') }}
+            </h2>
+            <a href="{{ route('admin.stocks.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-300 border border-transparent rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest hover:bg-gray-400 focus:bg-gray-400 active:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                Kembali
+            </a>
+        </div>
+    </x-slot>
 
-@section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">History Perubahan Stok</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('admin.stocks.index') }}" class="btn btn-default">
-                            <i class="fas fa-arrow-left"></i> Kembali
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.stocks.history') }}" method="GET" class="mb-4">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Tanggal Mulai</label>
-                                    <input type="date" class="form-control" name="start_date" 
-                                        value="{{ request('start_date') }}">
-                                </div>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900">
+                    <!-- Filter -->
+                    <form action="{{ route('admin.stocks.history') }}" method="GET" class="mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label for="search" class="block text-sm font-medium text-gray-700">Cari</label>
+                                <input type="text" name="search" id="search" value="{{ request('search') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    placeholder="Cari produk...">
                             </div>
-                            <div class="col-md-3">
-                                <div class="form-group">
-                                    <label>Tanggal Akhir</label>
-                                    <input type="date" class="form-control" name="end_date" 
-                                        value="{{ request('end_date') }}">
-                                </div>
+                            <div>
+                                <label for="type" class="block text-sm font-medium text-gray-700">Tipe</label>
+                                <select name="type" id="type" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="">Semua Tipe</option>
+                                    <option value="addition" {{ request('type') === 'addition' ? 'selected' : '' }}>Penambahan</option>
+                                    <option value="reduction" {{ request('type') === 'reduction' ? 'selected' : '' }}>Pengurangan</option>
+                                </select>
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>Produk</label>
-                                    <select class="form-control select2" name="product_id">
-                                        <option value="">Semua Produk</option>
-                                        @foreach($products as $product)
-                                            <option value="{{ $product->id }}" 
-                                                {{ request('product_id') == $product->id ? 'selected' : '' }}>
-                                                {{ $product->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <div>
+                                <label for="date_start" class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
+                                <input type="date" name="date_start" id="date_start" value="{{ request('date_start') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>Tipe</label>
-                                    <select class="form-control" name="type">
-                                        <option value="">Semua Tipe</option>
-                                        <option value="addition" {{ request('type') == 'addition' ? 'selected' : '' }}>
-                                            Penambahan
-                                        </option>
-                                        <option value="reduction" {{ request('type') == 'reduction' ? 'selected' : '' }}>
-                                            Pengurangan
-                                        </option>
-                                    </select>
-                                </div>
+                            <div>
+                                <label for="date_end" class="block text-sm font-medium text-gray-700">Tanggal Akhir</label>
+                                <input type="date" name="date_end" id="date_end" value="{{ request('date_end') }}" 
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
-                            <div class="col-md-2">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary btn-block">
-                                        <i class="fas fa-search"></i> Filter
-                                    </button>
-                                </div>
+                            <div class="flex items-end">
+                                <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Filter
+                                </button>
                             </div>
                         </div>
                     </form>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
+                    <!-- Tabel Riwayat -->
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
                                 <tr>
-                                    <th>Tanggal</th>
-                                    <th>Produk</th>
-                                    <th>Tipe</th>
-                                    <th>Jumlah</th>
-                                    <th>Stok Lama</th>
-                                    <th>Stok Baru</th>
-                                    <th>Keterangan</th>
-                                    <th>User</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tanggal
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Produk
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Tipe
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Jumlah
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Stok Sebelum
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Stok Sesudah
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Alasan
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        User
+                                    </th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse($histories as $history)
-                                    <tr>
-                                        <td>{{ $history->created_at->format('d/m/Y H:i') }}</td>
-                                        <td>{{ $history->product->name }}</td>
-                                        <td>
-                                            @if($history->type == 'addition')
-                                                <span class="badge badge-success">Penambahan</span>
-                                            @else
-                                                <span class="badge badge-danger">Pengurangan</span>
-                                            @endif
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->created_at->format('d/m/Y H:i') }}
                                         </td>
-                                        <td>{{ $history->quantity }}</td>
-                                        <td>{{ $history->old_stock }}</td>
-                                        <td>{{ $history->new_stock }}</td>
-                                        <td>{{ $history->description }}</td>
-                                        <td>{{ $history->user->name }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->product->nama_produk }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                {{ $history->type === 'addition' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ $history->type === 'addition' ? 'Penambahan' : 'Pengurangan' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->quantity }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->old_stock }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->new_stock }}
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                            {{ $history->description }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            {{ $history->user->name }}
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center">Tidak ada data</td>
+                                        <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                            Tidak ada data riwayat stok
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
 
+                    <!-- Pagination -->
                     <div class="mt-4">
                         {{ $histories->links() }}
                     </div>
@@ -117,16 +132,4 @@
             </div>
         </div>
     </div>
-</div>
-
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('.select2').select2({
-        theme: 'bootstrap4',
-        placeholder: 'Pilih produk...'
-    });
-});
-</script>
-@endpush
-@endsection 
+</x-app-layout> 

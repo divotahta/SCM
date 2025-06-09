@@ -14,61 +14,61 @@ class Purchase extends Model
     use HasFactory;
 
     protected $fillable = [
-        'supplier_id',
-        'invoice_number',
-        'purchase_date',
+        'pemasok_id',
+        'tanggal_pembelian',
+        'nomor_pembelian',
         'total_amount',
-        'notes',
-        'status',
-        'approved_at',
-        'approved_by',
-        'rejected_at',
-        'rejected_by',
-        'rejection_reason',
-        'received_at',
-        'received_by'
+        'catatan',
+        'status_pembelian',
+        'disetujui_pada',
+        'disetujui_oleh',
+        'ditolak_pada',
+        'ditolak_oleh',
+        'alasan_penolakan',
+        'diterima_pada',
+        'diterima_oleh'
     ];
 
     protected $casts = [
-        'purchase_date' => 'date',
-        'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
-        'received_at' => 'datetime'
+        'tanggal_pembelian' => 'date',
+        'disetujui_pada' => 'datetime',
+        'ditolak_pada' => 'datetime',
+        'diterima_pada' => 'datetime'
     ];
 
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class, 'pemasok_id');
     }
 
     public function details()
     {
-        return $this->hasMany(PurchaseDetail::class);
+        return $this->hasMany(PurchaseDetail::class, 'pembelian_id');
     }
 
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'disetujui_oleh');
     }
 
     public function rejectedBy()
     {
-        return $this->belongsTo(User::class, 'rejected_by');
+        return $this->belongsTo(User::class, 'ditolak_oleh');
     }
 
     public function receivedBy()
     {
-        return $this->belongsTo(User::class, 'received_by');
+        return $this->belongsTo(User::class, 'diterima_oleh');
     }
 
     public function approvalHistory()
     {
-        return $this->hasMany(PurchaseApprovalHistory::class);
+        return $this->hasMany(PurchaseApprovalHistory::class, 'pembelian_id');
     }
 
     public function createdBy()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'dibuat_oleh');
     }
 
     public function generateInvoiceNumber()

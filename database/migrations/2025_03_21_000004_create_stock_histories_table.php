@@ -8,21 +8,21 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('stock_histories', function (Blueprint $table) {
+        Schema::create('stock_history', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['addition', 'reduction']);
-            $table->integer('quantity');
-            $table->integer('old_stock');
-            $table->integer('new_stock');
-            $table->text('description');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('produk_id')->constrained('products')->onDelete('cascade');
+            $table->enum('jenis', ['masuk', 'keluar']);
+            $table->integer('jumlah');
+            $table->integer('stok_lama');
+            $table->integer('stok_baru');
+            $table->text('keterangan');
+            $table->foreignId('dibuat_oleh')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('stock_histories');
+        Schema::dropIfExists('stock_history');
     }
 }; 

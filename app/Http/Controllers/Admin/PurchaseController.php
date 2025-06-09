@@ -68,11 +68,11 @@ class PurchaseController extends Controller
                 $subtotal = $item['quantity'] * $item['price'];
                 
                 PurchaseDetail::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $subtotal
+                    'pembelian_id' => $purchase->id,
+                    'produk_id' => $item['id'],
+                    'jumlah' => $item['quantity'],
+                    'harga_satuan' => $item['price'],
+                    'total' => $subtotal
                 ]);
 
                 $total += $subtotal;
@@ -158,11 +158,11 @@ class PurchaseController extends Controller
                 $subtotal = $item['quantity'] * $item['price'];
                 
                 PurchaseDetail::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $subtotal
+                    'pembelian_id' => $purchase->id,
+                    'produk_id' => $item['id'],
+                    'jumlah' => $item['quantity'],
+                    'harga_satuan' => $item['price'],
+                    'total' => $subtotal
                 ]);
 
                 $total += $subtotal;
@@ -231,7 +231,7 @@ class PurchaseController extends Controller
 
     public function approve(Purchase $purchase)
     {
-        if (!Auth::user()->hasRole('owner')) {
+        if (Auth::user()->role !== 'owner') {
             return redirect()->back()->with('error', 'Anda tidak memiliki akses untuk menyetujui pembelian');
         }
 

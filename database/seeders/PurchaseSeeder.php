@@ -10,16 +10,17 @@ class PurchaseSeeder extends Seeder
 {
     public function run()
     {
-        // Create a purchase
+        // Buat pembelian
         $purchase = Purchase::create([
             'tanggal_pembelian' => now(),
             'nomor_pembelian' => 'PUR001',
             'pemasok_id' => 1,
-            'status_pembelian' => 'completed',
+            'status_pembelian' => 'approved',
             'dibuat_oleh' => 1,
+            'total_amount' => 1500000
         ]);
 
-        // Create purchase details
+        // Buat detail pembelian
         PurchaseDetail::create([
             'pembelian_id' => $purchase->id,
             'produk_id' => 1,

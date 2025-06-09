@@ -145,7 +145,7 @@
             </aside>
 
             <!-- Main Content -->
-            <main class="ml-64 p-8">
+            <main class="p-4 ml-64">
                 <!-- Header -->
                 <header class="flex items-center justify-between mb-8">
                     <div>

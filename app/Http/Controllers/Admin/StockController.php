@@ -21,112 +21,83 @@ class StockController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'unit']);
-
-        // Filter berdasarkan pencarian
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%");
+        $query = Product::with(['category', 'unit'])
+            ->when($request->search, function($q) use ($request) {
+                return $q->where('nama_produk', 'like', "%{$request->search}%")
+                    ->orWhere('kode_produk', 'like', "%{$request->search}%");
+            })
+            ->when($request->kategori_id, function($q) use ($request) {
+                return $q->where('kategori_id', $request->kategori_id);
+            })
+            ->when($request->status_stok, function($q) use ($request) {
+                if ($request->status_stok === 'low') {
+                    return $q->where('stok', '<=', 10);
+                } elseif ($request->status_stok === 'out') {
+                    return $q->where('stok', 0);
+                }
+                return $q;
             });
-        }
 
-        // Filter berdasarkan kategori
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        // Filter berdasarkan status stok
-        if ($request->has('stock_status')) {
-            switch ($request->stock_status) {
-                case 'low':
-                    $query->where('stock', '<=', DB::raw('min_stock'));
-                    break;
-                case 'out':
-                    $query->where('stock', '<=', 0);
-                    break;
-                case 'available':
-                    $query->where('stock', '>', 0);
-                    break;
-            }
-        }
-
-        $products = $query->paginate(10);
+        $products = $query->latest()->paginate(10);
         $categories = Category::all();
 
-        return view('admin.stocks.index', compact('products', 'categories'));
+        return view('Admin.stocks.index', compact('products', 'categories'));
     }
 
     public function history(Request $request)
     {
-        $query = StockHistory::with(['product', 'user']);
+        $query = StockHistory::with(['product', 'user'])
+            ->when($request->search, function($q) use ($request) {
+                return $q->whereHas('product', function($q) use ($request) {
+                    $q->where('nama_produk', 'like', "%{$request->search}%")
+                        ->orWhere('kode_produk', 'like', "%{$request->search}%");
+                });
+            })
+            ->when($request->type, function($q) use ($request) {
+                return $q->where('type', $request->type);
+            })
+            ->when($request->date_start && $request->date_end, function($q) use ($request) {
+                return $q->whereBetween('created_at', [$request->date_start, $request->date_end]);
+            });
 
-        // Filter berdasarkan tanggal
-        if ($request->has('start_date') && $request->has('end_date')) {
-            $query->whereBetween('created_at', [
-                Carbon::parse($request->start_date)->startOfDay(),
-                Carbon::parse($request->end_date)->endOfDay()
-            ]);
-        }
+        $histories = $query->latest()->paginate(10);
 
-        // Filter berdasarkan produk
-        if ($request->has('product_id')) {
-            $query->where('product_id', $request->product_id);
-        }
-
-        // Filter berdasarkan tipe
-        if ($request->has('type')) {
-            $query->where('type', $request->type);
-        }
-
-        $histories = $query->latest()->paginate(20);
-
-        return view('admin.stocks.history', compact('histories'));
+        return view('Admin.stocks.history', compact('histories'));
     }
 
-    public function adjust(Request $request)
+    public function adjust(Request $request, Product $product)
     {
         $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|numeric',
+            'quantity' => 'required|integer',
             'type' => 'required|in:addition,reduction',
-            'reason' => 'required|string'
+            'reason' => 'required|string|max:255'
         ]);
 
         DB::beginTransaction();
         try {
-            $product = Product::findOrFail($request->product_id);
-            $oldStock = $product->stock;
+            $oldStock = $product->stok;
+            $quantity = $request->quantity;
             
-            // Update stok produk
-            if ($request->type == 'addition') {
-                $product->stock += $request->quantity;
+            if ($request->type === 'addition') {
+                $newStock = $oldStock + $quantity;
             } else {
-                if ($product->stock < $request->quantity) {
-                    throw new \Exception('Stok tidak mencukupi');
+                if ($oldStock < $quantity) {
+                    throw new \Exception('Stok tidak mencukupi untuk pengurangan');
                 }
-                $product->stock -= $request->quantity;
+                $newStock = $oldStock - $quantity;
             }
-            $product->save();
+
+            // Update stok produk
+            $product->update(['stok' => $newStock]);
 
             // Catat history
             StockHistory::create([
                 'product_id' => $product->id,
                 'type' => $request->type,
-                'quantity' => $request->quantity,
+                'quantity' => $quantity,
                 'old_stock' => $oldStock,
-                'new_stock' => $product->stock,
+                'new_stock' => $newStock,
                 'description' => $request->reason,
-                'user_id' => Auth::id()
-            ]);
-
-            // Catat adjustment
-            StockAdjustment::create([
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'type' => $request->type,
-                'reason' => $request->reason,
                 'user_id' => Auth::id()
             ]);
 
@@ -171,47 +142,39 @@ class StockController extends Controller
 
     public function forecast(Request $request)
     {
-        $query = Product::with(['category', 'unit']);
-
-        // Filter berdasarkan kategori
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
+        $query = Product::with(['category', 'unit'])
+            ->when($request->kategori_id, function($q) use ($request) {
+                return $q->where('kategori_id', $request->kategori_id);
+            });
 
         $products = $query->get();
         $categories = Category::all();
 
         // Hitung forecast untuk setiap produk
         foreach ($products as $product) {
-            // Hitung rata-rata penjualan per bulan
-            $monthlySales = StockHistory::where('product_id', $product->id)
-                ->where('type', 'reduction')
-                ->where('created_at', '>=', now()->subMonths(3))
-                ->avg('quantity');
+            // Hitung rata-rata penjualan bulanan
+            $monthlySales = $product->orderDetails()
+                ->whereMonth('created_at', now()->month)
+                ->sum('jumlah');
 
-            // Hitung lead time (waktu tunggu) dalam hari
+            // Hitung lead time (dalam hari)
             $leadTime = 7; // Contoh: 7 hari
 
-            // Hitung safety stock (20% dari rata-rata penjualan bulanan)
-            $safetyStock = $monthlySales * 0.2;
+            // Hitung safety stock
+            $safetyStock = $monthlySales * 0.2; // 20% dari penjualan bulanan
 
             // Hitung reorder point
-            if ($monthlySales > 0) {
-                $reorderPoint = ($monthlySales / 30 * $leadTime) + $safetyStock;
-            } else {
-                $reorderPoint = $safetyStock; // Jika tidak ada penjualan, gunakan safety stock saja
-            }
+            $reorderPoint = ($monthlySales / 30 * $leadTime) + $safetyStock;
 
             // Hitung economic order quantity (EOQ)
             $orderCost = 100000; // Biaya pemesanan
             $holdingCost = 0.2; // Biaya penyimpanan (20% dari harga)
             $annualDemand = $monthlySales * 12;
             
-            // Cek apakah purchase_price dan holdingCost tidak nol
-            if ($product->purchase_price > 0 && $holdingCost > 0) {
-                $eoq = sqrt((2 * $annualDemand * $orderCost) / ($product->purchase_price * $holdingCost));
+            if ($product->harga_beli > 0 && $holdingCost > 0) {
+                $eoq = sqrt((2 * $annualDemand * $orderCost) / ($product->harga_beli * $holdingCost));
             } else {
-                $eoq = 0; // Set default value jika terjadi pembagian dengan nol
+                $eoq = 0;
             }
 
             $product->forecast = [
@@ -227,7 +190,7 @@ class StockController extends Controller
             return Excel::download(new StockForecastExport($products), 'forecast-stok.xlsx');
         }
 
-        return view('admin.stocks.forecast', compact('products', 'categories'));
+        return view('Admin.stocks.forecast', compact('products', 'categories'));
     }
 
     public function generateBarcode($id)

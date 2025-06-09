@@ -9,21 +9,29 @@ class TransactionDetail extends Model
 {
     use HasFactory;
 
+    protected $table = 'transaction_detail';
+
     protected $fillable = [
-        'transaction_id',
-        'product_id',
-        'quantity',
-        'price',
+        'transaksi_id',
+        'produk_id',
+        'jumlah',
+        'harga',
         'subtotal'
+    ];
+
+    protected $casts = [
+        'jumlah' => 'integer',
+        'harga' => 'decimal:2',
+        'subtotal' => 'decimal:2'
     ];
 
     public function transaction()
     {
-        return $this->belongsTo(Transaction::class);
+        return $this->belongsTo(Transaction::class, 'transaksi_id');
     }
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'produk_id');
     }
 } 

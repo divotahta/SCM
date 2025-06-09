@@ -10,20 +10,25 @@ class UnitSeeder extends Seeder
     public function run()
     {
         $units = [
-            'Pcs',
-            'Box',
-            'Kg',
-            'Meter',
-            'Liter',
-            'Sak',
-            'Unit',
-            'Set',
+            [
+                'nama_satuan' => 'Porsi',
+            ],
+            [
+                'nama_satuan' => 'Piring',
+            ],
+            [
+                'nama_satuan' => 'Kilogram',
+            ],
+            [
+                'nama_satuan' => 'Pack',
+            ],
+            [
+                'nama_satuan' => 'Box',
+            ],
         ];
 
         foreach ($units as $unit) {
-            Unit::create([
-                'nama_satuan' => $unit
-            ]);
+            Unit::create($unit);
         }
     }
 } 

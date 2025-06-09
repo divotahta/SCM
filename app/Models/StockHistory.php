@@ -9,29 +9,31 @@ class StockHistory extends Model
 {
     use HasFactory;
 
+    protected $table = 'stock_history';
+
     protected $fillable = [
-        'product_id',
-        'type',
-        'quantity',
-        'old_stock',
-        'new_stock',
-        'description',
-        'user_id'
+        'produk_id',
+        'jenis',
+        'jumlah',
+        'stok_lama',
+        'stok_baru',
+        'keterangan',
+        'dibuat_oleh'
     ];
 
     protected $casts = [
-        'quantity' => 'integer',
-        'old_stock' => 'integer',
-        'new_stock' => 'integer'
+        'jumlah' => 'integer',
+        'stok_lama' => 'integer',
+        'stok_baru' => 'integer'
     ];
 
-    public function product()
+    public function produk()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'produk_id');
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'dibuat_oleh');
     }
 } 

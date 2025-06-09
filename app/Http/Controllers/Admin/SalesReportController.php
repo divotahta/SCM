@@ -55,10 +55,10 @@ class SalesReportController extends Controller
 
         // Top produk
         $topProducts = $query->clone()
-            ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-            ->join('products', 'order_details.product_id', '=', 'products.id')
+            ->join('order_details', 'orders.id', '=', 'order_details.pesanan_id')
+            ->join('products', 'order_details.produk_id', '=', 'products.id')
             ->select('products.code', 'products.name', 
-                DB::raw('SUM(order_details.quantity) as total_quantity'),
+                DB::raw('SUM(order_details.jumlah) as total_quantity'),
                 DB::raw('SUM(order_details.subtotal) as total_sales'),
                 DB::raw('SUM(order_details.subtotal - (order_details.quantity * order_details.purchase_price)) as total_profit'))
             ->groupBy('products.id', 'products.code', 'products.name')
@@ -68,10 +68,10 @@ class SalesReportController extends Controller
 
         // Top pelanggan
         $topCustomers = $query->clone()
-            ->join('customers', 'orders.customer_id', '=', 'customers.id')
-            ->select('customers.code', 'customers.name',
+            ->join('customers', 'orders.pelanggan_id', '=', 'customers.id')
+            ->select('customers.kode_pelanggan', 'customers.nama',
                 DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
-                DB::raw('SUM(orders.total_amount) as total_sales'),
+                DB::raw('SUM(orders.sub_total) as total_sales'),
                 DB::raw('SUM(orders.total_amount - orders.total_cost) as total_profit'))
             ->groupBy('customers.id', 'customers.code', 'customers.name')
             ->orderBy('total_sales', 'desc')

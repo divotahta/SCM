@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\PDF;
 use App\Exports\CustomersExport;
 use App\Imports\CustomersImport;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
@@ -21,23 +22,14 @@ class CustomerController extends Controller
         if ($request->filled('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('nama', 'like', "%{$request->search}%")
-                    ->orWhere('code', 'like', "%{$request->search}%")
-                    ->orWhere('telepon', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%");
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('telepon', 'like', "%{$request->search}%");
             });
         }
 
         // Filter
-        if ($request->filled('loyalty_level')) {
-            $query->where('loyalty_level', $request->loyalty_level);
-        }
-
-        if ($request->filled('min_points')) {
-            $query->where('points', '>=', $request->min_points);
-        }
-
-        if ($request->filled('min_purchase')) {
-            $query->where('total_purchase', '>=', $request->min_purchase);
+        if ($request->filled('jenis')) {
+            $query->where('jenis', $request->jenis);
         }
 
         // Sort
@@ -57,21 +49,34 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'nama' => 'required|string|max:255',
             'email' => 'nullable|email|unique:customers',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'notes' => 'nullable|string'
+            'telepon' => 'nullable|string|max:20',
+            'alamat' => 'nullable|string',
+            'jenis' => 'nullable|string|in:perorangan,perusahaan',
+            'nama_bank' => 'nullable|string|max:255',
+            'pemegang_rekening' => 'nullable|string|max:255',
+            'nomor_rekening' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $customer = Customer::create([
-            'code' => 'CUST-' . Str::random(8),
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'notes' => $request->notes
-        ]);
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            $foto = $request->file('foto');
+            $filename = time() . '_' . $foto->getClientOriginalName();
+            $foto->storeAs('public/customers', $filename);
+            $data['foto'] = $filename;
+        }
+
+        $customer = Customer::create($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'customer' => $customer
+            ]);
+        }
 
         return redirect()
             ->route('admin.customers.show', $customer)
@@ -80,12 +85,12 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        $transactions = $customer->transactions()
+        $orders = $customer->orders()
             ->with(['details.product'])
             ->latest()
             ->paginate(10);
 
-        return view('admin.customers.show', compact('customer', 'transactions'));
+        return view('admin.customers.show', compact('customer', 'orders'));
     }
 
     public function edit(Customer $customer)
@@ -96,14 +101,32 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:customers,email,' . $customer->id,
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'notes' => 'nullable|string'
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|unique:customers,email,' . $customer->id,
+            'telepon' => 'required|string|max:20',
+            'alamat' => 'required|string',
+            'jenis' => 'required|string|in:perorangan,perusahaan',
+            'nama_bank' => 'nullable|string|max:255',
+            'pemegang_rekening' => 'nullable|string|max:255',
+            'nomor_rekening' => 'nullable|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $customer->update($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada
+            if ($customer->foto) {
+                Storage::delete('public/customers/' . $customer->foto);
+            }
+
+            $foto = $request->file('foto');
+            $filename = time() . '_' . $foto->getClientOriginalName();
+            $foto->storeAs('public/customers', $filename);
+            $data['foto'] = $filename;
+        }
+
+        $customer->update($data);
 
         return redirect()
             ->route('admin.customers.show', $customer)
@@ -112,8 +135,13 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        if ($customer->transactions()->exists()) {
-            return back()->with('error', 'Pelanggan tidak dapat dihapus karena memiliki transaksi');
+        if ($customer->orders()->exists()) {
+            return back()->with('error', 'Pelanggan tidak dapat dihapus karena memiliki pesanan');
+        }
+
+        // Hapus foto jika ada
+        if ($customer->foto) {
+            Storage::delete('public/customers/' . $customer->foto);
         }
 
         $customer->delete();

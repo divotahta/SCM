@@ -13,9 +13,20 @@ use Barryvdh\DomPDF\Facade\PDF;
 
 class SupplierController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $suppliers = Supplier::latest()->paginate(10);
+        $query = Supplier::query()
+            ->when($request->search, function($q) use ($request) {
+                $q->where('nama', 'like', "%{$request->search}%")
+                    ->orWhere('nama_toko', 'like', "%{$request->search}%")
+                    ->orWhere('email', 'like', "%{$request->search}%")
+                    ->orWhere('telepon', 'like', "%{$request->search}%");
+            })
+            ->when($request->jenis, function($q) use ($request) {
+                $q->where('jenis', $request->jenis);
+            });
+
+        $suppliers = $query->latest()->paginate(10);
         return view('admin.suppliers.index', compact('suppliers'));
     }
 
@@ -32,7 +43,7 @@ class SupplierController extends Controller
             'telepon' => 'required|string|max:20',
             'alamat' => 'required|string',
             'nama_toko' => 'required|string|max:255',
-            'jenis' => 'required|string|in:retail,grosir,distributor',
+            'jenis' => 'required|string|in:distributor,grosir',
             'nama_bank' => 'nullable|string|max:255',
             'pemegang_rekening' => 'nullable|string|max:255',
             'nomor_rekening' => 'nullable|string|max:50',
@@ -55,6 +66,7 @@ class SupplierController extends Controller
 
     public function show(Supplier $supplier)
     {
+        $supplier->load('purchases.details.product');
         return view('admin.suppliers.show', compact('supplier'));
     }
 
@@ -71,7 +83,7 @@ class SupplierController extends Controller
             'telepon' => 'required|string|max:20',
             'alamat' => 'required|string',
             'nama_toko' => 'required|string|max:255',
-            'jenis' => 'required|string|in:retail,grosir,distributor',
+            'jenis' => 'required|string|in:distributor,grosir',
             'nama_bank' => 'nullable|string|max:255',
             'pemegang_rekening' => 'nullable|string|max:255',
             'nomor_rekening' => 'nullable|string|max:50',
@@ -99,6 +111,12 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
+        // Cek apakah supplier memiliki pembelian
+        if ($supplier->purchases()->exists()) {
+            return redirect()->route('admin.suppliers.index')
+                ->with('error', 'Pemasok tidak dapat dihapus karena memiliki data pembelian');
+        }
+
         if ($supplier->foto) {
             Storage::disk('public')->delete($supplier->foto);
         }

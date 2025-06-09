@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Order;
 use App\Models\OrderDetail;
+use App\Models\Customer;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use App\Exports\OrdersExport;
 use App\Models\TransactionLog;
@@ -18,111 +20,120 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with(['customer', 'details.product'])
+        $orders = Order::with(['customer', 'details.product'])
             ->when($request->search, function($q) use ($request) {
-                $q->where('invoice_number', 'like', "%{$request->search}%")
-                    ->orWhereHas('customer', function($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
-                    });
+                $q->where('nomor_faktur', 'like', "%{$request->search}%")
+                  ->orWhereHas('customer', function($q) use ($request) {
+                      $q->where('nama', 'like', "%{$request->search}%");
+                  });
             })
-            ->when($request->status, function($q) use ($request) {
-                $q->where('status', $request->status);
+            ->when($request->status_pesanan, function($q) use ($request) {
+                $q->where('status_pesanan', $request->status_pesanan);
             })
             ->when($request->date_from, function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('tanggal_pesanan', '>=', $request->date_from);
             })
             ->when($request->date_to, function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
-            });
+                $q->whereDate('tanggal_pesanan', '<=', $request->date_to);
+            })
+            ->latest()
+            ->paginate(10);
 
-        $orders = $query->latest()->paginate(10);
+        $customers = Customer::all();
 
-        return view('admin.orders.index', compact('orders'));
+        return view('Admin.orders.index', compact('orders', 'customers'));
     }
 
     public function pending(Request $request)
     {
-        $query = Order::with(['customer', 'details.product'])
-            ->whereIn('status', ['pending', 'processing'])
+        $orders = Order::with(['customer', 'details.product'])
+            ->whereIn('status_pesanan', ['pending', 'processing'])
             ->when($request->search, function($q) use ($request) {
-                $q->where('invoice_number', 'like', "%{$request->search}%")
-                    ->orWhereHas('customer', function($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
-                    });
+                $q->where('nomor_faktur', 'like', "%{$request->search}%")
+                  ->orWhereHas('customer', function($q) use ($request) {
+                      $q->where('nama', 'like', "%{$request->search}%");
+                  });
             })
-            ->when($request->status, function($q) use ($request) {
-                $q->where('status', $request->status);
+            ->when($request->status_pesanan, function($q) use ($request) {
+                $q->where('status_pesanan', $request->status_pesanan);
             })
             ->when($request->date_from, function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('tanggal_pesanan', '>=', $request->date_from);
             })
             ->when($request->date_to, function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
-            });
+                $q->whereDate('tanggal_pesanan', '<=', $request->date_to);
+            })
+            ->latest()
+            ->paginate(10);
 
-        $orders = $query->latest()->paginate(10);
-        $pendingCount = Order::where('status', 'pending')->count();
-        $processingCount = Order::where('status', 'processing')->count();
+        $pendingCount = Order::where('status_pesanan', 'pending')->count();
+        $processingCount = Order::where('status_pesanan', 'processing')->count();
 
-        return view('admin.orders.pending', compact('orders', 'pendingCount', 'processingCount'));
+        return view('Admin.orders.pending', compact('orders', 'pendingCount', 'processingCount'));
     }
 
     public function completed(Request $request)
     {
-        $query = Order::with(['customer', 'details.product'])
-            ->where('status', 'completed')
+        $orders = Order::with(['customer', 'details.product'])
+            ->where('status_pesanan', 'completed')
             ->when($request->search, function($q) use ($request) {
-                $q->where('invoice_number', 'like', "%{$request->search}%")
-                    ->orWhereHas('customer', function($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
-                    });
+                $q->where('nomor_faktur', 'like', "%{$request->search}%")
+                  ->orWhereHas('customer', function($q) use ($request) {
+                      $q->where('nama', 'like', "%{$request->search}%");
+                  });
             })
             ->when($request->date_from, function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('tanggal_pesanan', '>=', $request->date_from);
             })
             ->when($request->date_to, function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
-            });
+                $q->whereDate('tanggal_pesanan', '<=', $request->date_to);
+            })
+            ->latest()
+            ->paginate(10);
 
-        $orders = $query->latest()->paginate(10);
-        $completedCount = Order::where('status', 'completed')->count();
+        $completedCount = Order::where('status_pesanan', 'completed')->count();
 
-        return view('admin.orders.completed', compact('orders', 'completedCount'));
+        return view('Admin.orders.completed', compact('orders', 'completedCount'));
     }
 
     public function unpaid(Request $request)
     {
-        $query = Order::with(['customer', 'details.product'])
-            ->where('payment_status', '!=', 'paid')
+        $orders = Order::with(['customer', 'details.product'])
+            ->where('jenis_pembayaran', 'credit')
+            ->where('bayar', '<', DB::raw('total'))
             ->when($request->search, function($q) use ($request) {
-                $q->where('invoice_number', 'like', "%{$request->search}%")
-                    ->orWhereHas('customer', function($q) use ($request) {
-                        $q->where('name', 'like', "%{$request->search}%");
-                    });
-            })
-            ->when($request->payment_status, function($q) use ($request) {
-                $q->where('payment_status', $request->payment_status);
+                $q->where('nomor_faktur', 'like', "%{$request->search}%")
+                  ->orWhereHas('customer', function($q) use ($request) {
+                      $q->where('nama', 'like', "%{$request->search}%");
+                  });
             })
             ->when($request->date_from, function($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('tanggal_pesanan', '>=', $request->date_from);
             })
             ->when($request->date_to, function($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
-            });
+                $q->whereDate('tanggal_pesanan', '<=', $request->date_to);
+            })
+            ->latest()
+            ->paginate(10);
 
-        $orders = $query->latest()->paginate(10);
-        $unpaidCount = Order::where('payment_status', '!=', 'paid')->count();
+        $unpaidCount = Order::where('jenis_pembayaran', 'credit')
+            ->where('bayar', '<', DB::raw('total'))
+            ->count();
 
-        return view('admin.orders.unpaid', compact('orders', 'unpaidCount'));
+        return view('Admin.orders.unpaid', compact('orders', 'unpaidCount'));
     }
 
     public function getOrderCounts()
     {
-        return response()->json([
-            'pending' => Order::where('status', 'pending')->count(),
-            'processing' => Order::where('status', 'processing')->count(),
-            'unpaid' => Order::where('payment_status', '!=', 'paid')->count()
-        ]);
+        $counts = [
+            'total' => Order::count(),
+            'pending' => Order::where('status_pesanan', 'pending')->count(),
+            'processing' => Order::where('status_pesanan', 'processing')->count(),
+            'completed' => Order::where('status_pesanan', 'completed')->count(),
+            'cancelled' => Order::where('status_pesanan', 'cancelled')->count(),
+        ];
+
+        return response()->json($counts);
     }
 
     public function show(Order $order)
@@ -131,13 +142,13 @@ class OrderController extends Controller
             $query->where('action', 'like', '%status%')->latest();
         }]);
         
-        return view('admin.orders.show', compact('order'));
+        return view('Admin.orders.show', compact('order'));
     }
 
     public function edit(Order $order)
     {
         $order->load(['customer', 'details.product']);
-        return view('admin.orders.edit', compact('order'));
+        return view('Admin.orders.edit', compact('order'));
     }
 
     public function update(Request $request, Order $order)
@@ -145,48 +156,44 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Update status jika ada
-            if ($request->has('status') && $request->status !== $order->status) {
-                $oldStatus = $order->status;
-                $order->status = $request->status;
+            if ($request->has('status_pesanan') && $request->status_pesanan !== $order->status_pesanan) {
+                $oldStatus = $order->status_pesanan;
+                $order->status_pesanan = $request->status_pesanan;
                 $order->save();
 
-                // Log perubahan status
                 TransactionLog::create([
                     'transaction_id' => $order->id,
                     'transaction_type' => 'order',
                     'action' => 'update_status',
-                    'description' => "Status pesanan diubah dari {$oldStatus} menjadi {$request->status}",
-                    'old_data' => ['status' => $oldStatus],
-                    'new_data' => ['status' => $request->status],
+                    'description' => "Status pesanan diubah dari {$oldStatus} menjadi {$request->status_pesanan}",
+                    'old_data' => ['status_pesanan' => $oldStatus],
+                    'new_data' => ['status_pesanan' => $request->status_pesanan],
                     'user_id' => Auth::id()
                 ]);
             }
 
-            // Update detail pesanan jika ada
             if ($request->has('details')) {
                 $details = json_decode($request->details, true);
                 $total = 0;
 
                 foreach ($details as $detail) {
                     $orderDetail = OrderDetail::find($detail['id']);
-                    if ($orderDetail && $orderDetail->order_id === $order->id) {
-                        $oldQuantity = $orderDetail->quantity;
-                        $orderDetail->quantity = $detail['quantity'];
-                        $orderDetail->subtotal = $orderDetail->price * $detail['quantity'];
+                    if ($orderDetail && $orderDetail->pesanan_id === $order->id) {
+                        $oldQuantity = $orderDetail->jumlah;
+                        $orderDetail->jumlah = $detail['quantity'];
+                        $orderDetail->total = $orderDetail->harga_satuan * $detail['quantity'];
                         $orderDetail->save();
 
-                        $total += $orderDetail->subtotal;
+                        $total += $orderDetail->total;
 
-                        // Log perubahan quantity
                         if ($oldQuantity != $detail['quantity']) {
                             TransactionLog::create([
                                 'transaction_id' => $order->id,
                                 'transaction_type' => 'order',
                                 'action' => 'update_quantity',
-                                'description' => "Quantity produk {$orderDetail->product->name} diubah dari {$oldQuantity} menjadi {$detail['quantity']}",
-                                'old_data' => ['quantity' => $oldQuantity],
-                                'new_data' => ['quantity' => $detail['quantity']],
+                                'description' => "Jumlah produk {$orderDetail->product->nama_produk} diubah dari {$oldQuantity} menjadi {$detail['quantity']}",
+                                'old_data' => ['jumlah' => $oldQuantity],
+                                'new_data' => ['jumlah' => $detail['quantity']],
                                 'user_id' => Auth::id()
                             ]);
                         }
@@ -220,7 +227,6 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // Log penghapusan pesanan
             TransactionLog::create([
                 'transaction_id' => $order->id,
                 'transaction_type' => 'order',
@@ -256,7 +262,88 @@ class OrderController extends Controller
     public function exportPdf()
     {
         $orders = Order::with(['customer', 'details.product'])->get();
-        $pdf = PDF::loadView('admin.orders.pdf', compact('orders'));
+        $pdf = PDF::loadView('Admin.orders.pdf', compact('orders'));
         return $pdf->download('orders.pdf');
+    }
+
+    public function create()
+    {
+        $customers = Customer::orderBy('nama')->get();
+        $products = Product::where('stok', '>', 0)
+            ->orderBy('nama_produk')
+            ->get();
+
+        return view('Admin.orders.create', compact('customers', 'products'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'customer_id' => 'required|exists:customers,id',
+            'tanggal_pesanan' => 'required|date',
+            'status_pesanan' => 'required|in:pending,processing,completed,cancelled',
+            'metode_pembayaran' => 'required|in:cash,transfer,qris',
+            'status_pembayaran' => 'required|in:paid,unpaid,partial',
+            'catatan' => 'nullable|string',
+            'products' => 'required|array',
+            'products.*.id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.price' => 'required|numeric|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Generate nomor faktur
+            $lastOrder = Order::latest()->first();
+            $lastNumber = $lastOrder ? intval(substr($lastOrder->nomor_faktur, 3)) : 0;
+            $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT);
+            $nomorFaktur = 'INV' . $newNumber;
+
+            // Hitung total
+            $total = 0;
+            foreach ($request->products as $item) {
+                $total += $item['quantity'] * $item['price'];
+            }
+
+            // Buat pesanan
+            $order = Order::create([
+                'customer_id' => $request->customer_id,
+                'nomor_faktur' => $nomorFaktur,
+                'tanggal_pesanan' => $request->tanggal_pesanan,
+                'total' => $total,
+                'status_pesanan' => $request->status_pesanan,
+                'metode_pembayaran' => $request->metode_pembayaran,
+                'status_pembayaran' => $request->status_pembayaran,
+                'catatan' => $request->catatan,
+                'created_by' => Auth::user()->id,
+            ]);
+
+            // Simpan detail pesanan
+            foreach ($request->products as $item) {
+                $order->details()->create([
+                    'product_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'subtotal' => $item['quantity'] * $item['price'],
+                ]);
+
+                // Update stok produk
+                $product = Product::find($item['id']);
+                $product->stok -= $item['quantity'];
+                $product->save();
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.orders.show', $order->id)
+                ->with('success', 'Pesanan berhasil dibuat.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 } 

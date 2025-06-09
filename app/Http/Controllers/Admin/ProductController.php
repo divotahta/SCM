@@ -52,20 +52,20 @@ class ProductController extends Controller
             'nama_produk' => 'required|string|max:255',
             'kode_produk' => 'required|string|max:50|unique:products',
             'kategori_id' => 'required|exists:categories,id',
-            'satuan_id' => 'required|exists:units,id',
+            'unit_id' => 'required|exists:units,id',
             'harga_beli' => 'required|numeric|min:0',
             'harga_jual' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
         $data = $request->all();
 
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = Str::slug($request->name) . '-' . time() . '.' . $image->getClientOriginalExtension();
+        if ($request->hasFile('gambar_produk')) {
+            $image = $request->file('gambar_produk');
+            $imageName = Str::slug($request->nama_produk) . '-' . time() . '.' . $image->getClientOriginalExtension();
             $image->storeAs('public/products', $imageName);
-            $data['image'] = $imageName;
+            $data['gambar_produk'] = $imageName;
         }
 
         Product::create($data);
@@ -78,7 +78,7 @@ class ProductController extends Controller
     {
         $categories = Category::all();
         $units = Unit::all();
-        return view('admin.products.edit', compact('product', 'categories', 'units'));
+        return view('Admin.products.edit', compact('product', 'categories', 'units'));
     }
 
     public function update(Request $request, Product $product)
@@ -91,15 +91,20 @@ class ProductController extends Controller
             'harga_beli' => 'required|numeric|min:0',
             'harga_jual' => 'required|numeric|min:0',
             'stok' => 'required|integer|min:0',
-            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'gambar_produk' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $data = $request->all();
-        dd($data);
+        $data = $request->except('gambar_produk');
 
         if ($request->hasFile('gambar_produk')) {
+            // Hapus gambar lama jika ada
+            if ($product->gambar_produk) {
+                Storage::delete('public/products/' . $product->gambar_produk);
+            }
+
+            // Upload gambar baru
             $image = $request->file('gambar_produk');
-            $imageName = Str::slug($request->nama_produk) . '-' . time() . '.' . $image->getClientOriginalExtension();
+            $imageName = time() . '.' . $image->getClientOriginalExtension();
             $image->storeAs('public/products', $imageName);
             $data['gambar_produk'] = $imageName;
         }

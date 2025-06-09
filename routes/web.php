@@ -11,8 +11,10 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Owner\PurchaseController;
 use App\Http\Controllers\Owner\DashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Admin\SalesReportController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\PurchaseReportController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -84,14 +86,14 @@ Route::middleware('guest')->group(function () {
 
 // Admin Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/sales-report', [SalesReportController::class, 'index'])->name('sales-report');
 
     // POS Routes
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::get('/pos/search-products', [PosController::class, 'searchProducts'])->name('pos.search-products');
     Route::get('/pos/customers', [PosController::class, 'getCustomers'])->name('pos.customers');
+    Route::post('/pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
     Route::post('/pos/process-transaction', [PosController::class, 'processTransaction'])->name('pos.process-transaction');
     Route::get('/pos/receipt/{id}', [PosController::class, 'printReceipt'])->name('pos.receipt');
     Route::post('/pos/void/{id}', [PosController::class, 'voidTransaction'])->name('pos.void');
@@ -99,16 +101,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Order Management
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::get('/orders/pending', [OrderController::class, 'pending'])->name('orders.pending');
-    Route::get('/orders/completed', [OrderController::class, 'completed'])->name('orders.completed');
-    Route::get('/orders/unpaid', [OrderController::class, 'unpaid'])->name('orders.unpaid');
-    Route::get('/orders/counts', [OrderController::class, 'getOrderCounts'])->name('orders.counts');
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     Route::get('/orders/{order}/edit', [OrderController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/{order}', [OrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
     Route::get('/orders/export/excel', [OrderController::class, 'exportExcel'])->name('orders.export.excel');
     Route::get('/orders/export/pdf', [OrderController::class, 'exportPdf'])->name('orders.export.pdf');
+    Route::get('/orders/counts', [OrderController::class, 'getOrderCounts'])->name('orders.counts');
 
     // Stock Management
     Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
@@ -143,6 +144,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/broadcast', [CustomerController::class, 'broadcast'])->name('customers.broadcast');
+
+    //purchase
+    Route::get('purchases', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+    Route::get('purchases/{purchase}/edit', [PurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::put('purchases/{purchase}', [PurchaseController::class, 'update'])->name('purchases.update');
+    Route::delete('purchases/{purchase}', [PurchaseController::class, 'destroy'])->name('purchases.destroy');
+    Route::post('purchases/import', [PurchaseController::class, 'import'])->name('purchases.import');
+    Route::get('purchases/export', [PurchaseController::class, 'export'])->name('purchases.export');
+    Route::post('purchases/broadcast', [PurchaseController::class, 'broadcast'])->name('purchases.broadcast');
 
     // Supplier Management
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');

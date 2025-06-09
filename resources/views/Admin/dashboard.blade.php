@@ -1,244 +1,193 @@
 <x-app-layout>
     <x-slot name="header">
-        Admin Dashboard
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Dashboard') }}
+        </h2>
     </x-slot>
 
-    <!-- Statistik Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Pesanan -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-blue-100 text-blue-500">
-                    <i class="fas fa-shopping-cart text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-500">Total Pesanan</p>
-                    <div class="flex items-baseline">
-                        <p class="text-2xl font-semibold text-gray-700">24</p>
-                        <p class="ml-2 text-sm text-gray-500">hari ini</p>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Card Statistik -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-700">Total Penjualan Hari Ini</h3>
+                                <p class="text-2xl font-bold text-gray-900">Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1">128 pesanan bulan ini</p>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-700">Total Transaksi Hari Ini</h3>
+                                <p class="text-2xl font-bold text-gray-900">{{ $totalTransaksi }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-700">Total Produk</h3>
+                                <p class="text-2xl font-bold text-gray-900">{{ $totalProduk }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-lg font-semibold text-gray-700">Total Pelanggan</h3>
+                                <p class="text-2xl font-bold text-gray-900">{{ $totalPelanggan }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Total Penjualan -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-green-100 text-green-500">
-                    <i class="fas fa-money-bill-wave text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-500">Total Penjualan</p>
-                    <div class="flex items-baseline">
-                        <p class="text-2xl font-semibold text-gray-700">Rp 2.5M</p>
-                        <p class="ml-2 text-sm text-gray-500">hari ini</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Grafik Penjualan -->
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Grafik Penjualan 7 Hari Terakhir</h3>
+                        <canvas id="salesChart" height="300"></canvas>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1">Rp 15.8M bulan ini</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Total Pembelian -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
-                    <i class="fas fa-shopping-basket text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-500">Total Pembelian</p>
-                    <div class="flex items-baseline">
-                        <p class="text-2xl font-semibold text-gray-700">Rp 1.2M</p>
-                        <p class="ml-2 text-sm text-gray-500">bulan ini</p>
+                <!-- Produk Terlaris -->
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Produk Terlaris</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Terjual</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($produkTerlaris as $produk)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $produk->nama_produk }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ $produk->total_terjual }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-500 mt-1">45 transaksi</p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Stok Menipis -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
-            <div class="flex items-center">
-                <div class="p-3 rounded-full bg-red-100 text-red-500">
-                    <i class="fas fa-exclamation-triangle text-2xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-500">Stok Menipis</p>
-                    <div class="flex items-baseline">
-                        <p class="text-2xl font-semibold text-gray-700">8</p>
-                        <p class="ml-2 text-sm text-gray-500">produk</p>
+                <!-- Stok Menipis -->
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Stok Menipis</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($stokMenipis as $produk)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $produk->nama_produk }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ $produk->stok }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <p class="text-sm text-red-500 mt-1">Perlu restock</p>
+                </div>
+
+                <!-- Transaksi Terakhir -->
+                <div class="bg-white overflow-hidden shadow-sm rounded-lg">
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Transaksi Terakhir</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
+                                        <th class="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($transaksiTerakhir as $transaksi)
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $transaksi->kode_transaksi }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">Rp {{ number_format($transaksi->total_harga, 0, ',', '.') }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Chart dan Tabel -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Chart Penjualan -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Penjualan Bulanan</h3>
-            <canvas id="salesChart" height="300"></canvas>
-        </div>
-
-        <!-- Produk Terlaris -->
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Produk Terlaris</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Produk</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Terjual</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pendapatan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">Produk A</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">150</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 15.000.000</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">Produk B</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">120</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 12.000.000</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">Produk C</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">100</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 10.000.000</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">Produk D</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">80</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 8.000.000</td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">Produk E</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">75</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 7.500.000</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Pesanan Terbaru -->
-    <div class="mt-6">
-        <div class="bg-white rounded-xl shadow-sm p-6">
-            <h3 class="text-lg font-semibold text-gray-700 mb-4">Pesanan Terbaru</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pelanggan</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">#ORD001</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">John Doe</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">2024-03-21</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 1.500.000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                    Selesai
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">#ORD002</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Jane Smith</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">2024-03-21</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 2.000.000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                    Proses
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">#ORD003</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Mike Johnson</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">2024-03-20</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 3.500.000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Pengiriman
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">#ORD004</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Sarah Wilson</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">2024-03-20</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 1.800.000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                    Selesai
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">#ORD005</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">David Brown</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">2024-03-19</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">Rp 2.500.000</td>
-                            <td class="px-4 py-3 text-sm">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                    Batal
-                                </span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Data untuk chart
+        // Data untuk grafik
+        const salesData = @json($penjualanHarian);
+        
+        // Konfigurasi grafik
         const ctx = document.getElementById('salesChart').getContext('2d');
-        const salesChart = new Chart(ctx, {
+        new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                labels: salesData.map(item => item.tanggal),
                 datasets: [{
-                    label: 'Penjualan',
-                    data: [12, 19, 15, 17, 22, 25, 28, 24, 20, 18, 16, 14],
+                    label: 'Total Penjualan',
+                    data: salesData.map(item => item.total),
                     borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    tension: 0.1
                 }]
             },
             options: {
                 responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            display: true,
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
                         }
                     }
                 }

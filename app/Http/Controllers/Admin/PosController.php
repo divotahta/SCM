@@ -13,22 +13,38 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\StockHistory;
+use App\Models\User;
 
 class PosController extends Controller
 {
     public function index()
     {
-        return view('admin.pos.index');
+        $products = Product::where('stok', '>', 0)
+            ->orderBy('nama_produk')
+            ->get();
+            
+        $categories = $products->groupBy('category.nama_kategori');
+        $customers = Customer::orderBy('nama')->get();
+        
+        $cart = [];
+        $subtotal = 0;
+        $tax = 0;
+        $total = 0;
+        
+        return view('admin.pos.index', compact('products', 'categories', 'customers', 'cart', 'subtotal', 'tax', 'total'));
     }
 
     public function searchProducts(Request $request)
     {
         $query = $request->get('q');
         
-        $products = Product::where('name', 'like', "%{$query}%")
-            ->orWhere('code', 'like', "%{$query}%")
-            ->where('stock', '>', 0)
-            ->select('id', 'name', 'code', 'price', 'stock')
+        $products = Product::with(['category', 'unit'])
+            ->where(function($q) use ($query) {
+                $q->where('nama_produk', 'like', "%{$query}%")
+                    ->orWhere('kode_produk', 'like', "%{$query}%");
+            })
+            ->where('stok', '>', 0)
+            ->select('id', 'nama_produk', 'kode_produk', 'harga_jual', 'stok')
             ->limit(10)
             ->get();
 
@@ -37,109 +53,122 @@ class PosController extends Controller
 
     public function getCustomers()
     {
-        $customers = Customer::select('id', 'name')->get();
+        $customers = Customer::select('id', 'nama', 'telepon')->get();
         return response()->json($customers);
     }
 
     public function processTransaction(Request $request)
     {
         $request->validate([
-            'customer_id' => 'required|exists:customers,id',
             'items' => 'required|array',
-            'items.*.id' => 'required|exists:products,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|in:cash,transfer,qris',
-            'payment_amount' => 'required|numeric|min:0',
-            'total' => 'required|numeric|min:0'
+            'items.*.produk_id' => 'required|exists:products,id',
+            'items.*.jumlah' => 'required|integer|min:1',
+            'items.*.harga' => 'required|numeric|min:0',
+            'items.*.subtotal' => 'required|numeric|min:0',
+            'pelanggan_id' => 'nullable|exists:customers,id',
+            'total_harga' => 'required|numeric|min:0',
+            'total_bayar' => 'required|numeric|min:0',
+            'total_kembali' => 'required|numeric|min:0',
+            'metode_pembayaran' => 'required|in:cash,transfer,qris',
+            'catatan' => 'nullable|string'
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Validasi stok
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['id']);
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception("Stok produk {$product->name} tidak mencukupi. Tersedia: {$product->stock}");
-                }
-            }
-
-            // Create transaction
+            // Buat transaksi baru
             $transaction = Transaction::create([
-                'customer_id' => $request->customer_id,
-                'payment_method' => $request->payment_method,
-                'payment_amount' => $request->payment_amount,
-                'total' => $request->total,
-                'status' => 'completed'
+                'pelanggan_id' => $request->pelanggan_id,
+                'total_harga' => $request->total_harga,
+                'total_bayar' => $request->total_bayar,
+                'total_kembali' => $request->total_kembali,
+                'metode_pembayaran' => $request->metode_pembayaran,
+                'status' => 'selesai',
+                'catatan' => $request->catatan
             ]);
 
-            // Create transaction details and update stock
+            // Simpan detail transaksi
             foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['id']);
-                
                 TransactionDetail::create([
-                    'transaction_id' => $transaction->id,
-                    'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['price'] * $item['quantity']
+                    'transaksi_id' => $transaction->id,
+                    'produk_id' => $item['produk_id'],
+                    'jumlah' => $item['jumlah'],
+                    'harga' => $item['harga'],
+                    'subtotal' => $item['subtotal']
                 ]);
 
-                // Update stock
-                $oldStock = $product->stock;
-                $product->decrement('stock', $item['quantity']);
-                $newStock = $product->stock;
-
-                // Log perubahan stok
-                Log::info('Stock updated', [
-                    'product_id' => $product->id,
-                    'old_stock' => $oldStock,
-                    'new_stock' => $newStock,
-                    'quantity' => $item['quantity']
-                ]);
+                // Update stok produk
+                $product = Product::find($item['produk_id']);
+                $product->stok -= $item['jumlah'];
+                $product->save();
             }
 
-            // Log transaksi
-            TransactionLog::create([
-                'transaction_id' => $transaction->id,
-                'user_id' => Auth::id(),
-                'action' => 'create',
-                'description' => 'Transaksi baru dibuat',
-                'new_data' => [
-                    'invoice_number' => $transaction->invoice_number,
-                    'total' => $transaction->total,
-                    'payment_method' => $transaction->payment_method
-                ]
-            ]);
+            // Update data pelanggan jika ada
+            if ($request->pelanggan_id) {
+                $customer = Customer::find($request->pelanggan_id);
+                $customer->total_pembelian += $request->total_harga;
+                $customer->updateLoyaltyLevel();
+                $customer->addPoints($request->total_harga);
+            }
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'transaction_id' => $transaction->id,
-                'invoice_number' => $transaction->invoice_number
+                'message' => 'Transaksi berhasil disimpan',
+                'data' => [
+                    'kode_transaksi' => $transaction->kode_transaksi,
+                    'total_harga' => $transaction->total_harga,
+                    'total_bayar' => $transaction->total_bayar,
+                    'total_kembali' => $transaction->total_kembali
+                ]
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Transaction failed', [
-                'error' => $e->getMessage(),
-                'request' => $request->all()
-            ]);
-            
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
 
     public function printReceipt($id)
     {
-        $transaction = Transaction::with(['customer', 'details.product'])
+        $transaksi = Transaction::with(['details.product', 'customer', 'user'])
             ->findOrFail($id);
 
-        return view('admin.pos.receipt', compact('transaction'));
+        $data = [
+            'transaksi' => $transaksi,
+            'tanggal' => $transaksi->created_at->format('d/m/Y H:i:s'),
+            'kasir' => $transaksi->user ? $transaksi->user->name : 'System',
+            'items' => $transaksi->details->map(function($detail) {
+                return [
+                    'nama' => $detail->product->nama_produk,
+                    'jumlah' => $detail->jumlah,
+                    'harga' => $detail->harga,
+                    'subtotal' => $detail->subtotal
+                ];
+            }),
+            'subtotal' => $transaksi->details->sum('subtotal'),
+            'ppn' => $transaksi->details->sum('subtotal') * 0.11,
+            'total' => $transaksi->total_harga,
+            'bayar' => $transaksi->total_bayar,
+            'kembali' => $transaksi->total_kembali,
+            'metode' => $this->getMetodePembayaran($transaksi->metode_pembayaran)
+        ];
+
+        return view('admin.pos.receipt', $data);
+    }
+
+    private function getMetodePembayaran($metode)
+    {
+        return match($metode) {
+            'cash' => 'Tunai',
+            'card' => 'Kartu',
+            'qris' => 'QRIS',
+            default => $metode
+        };
     }
 
     public function voidTransaction($id)
@@ -192,5 +221,107 @@ class PosController extends Controller
                 'created_by' => Auth::id()
             ]);
         });
+    }
+
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'items' => 'required|array',
+            'items.*.id' => 'required|exists:products,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'payment_method' => 'required|in:cash,card,qris',
+            'customer_id' => 'nullable|exists:customers,id',
+            'amount_paid' => 'required|numeric|min:0'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Hitung total
+            $subtotal = 0;
+            foreach ($request->items as $item) {
+                $product = Product::findOrFail($item['id']);
+                if ($product->stok < $item['quantity']) {
+                    throw new \Exception("Stok produk {$product->nama_produk} tidak mencukupi");
+                }
+                $subtotal += $product->harga_jual * $item['quantity'];
+            }
+            $tax = $subtotal * 0.11;
+            $total = $subtotal + $tax;
+
+            // Validasi jumlah pembayaran
+            if ($request->amount_paid < $total) {
+                throw new \Exception('Jumlah pembayaran kurang');
+            }
+
+            // Buat transaksi baru
+            $transaction = Transaction::create([
+                'kode_transaksi' => 'TRX-' . date('YmdHis') . rand(100, 999),
+                'pelanggan_id' => $request->customer_id,
+                'total_harga' => $total,
+                'total_bayar' => $request->amount_paid,
+                'total_kembali' => $request->amount_paid - $total,
+                'metode_pembayaran' => $request->payment_method,
+                'status' => 'selesai',
+                'catatan' => $request->note
+            ]);
+
+            // Simpan detail transaksi
+            foreach ($request->items as $item) {
+                $product = Product::findOrFail($item['id']);
+                
+                TransactionDetail::create([
+                    'transaksi_id' => $transaction->id,
+                    'produk_id' => $product->id,
+                    'jumlah' => $item['quantity'],
+                    'harga' => $product->harga_jual,
+                    'subtotal' => $product->harga_jual * $item['quantity']
+                ]);
+
+                // Update stok
+                $product->stok -= $item['quantity'];
+                $product->save();
+
+                // Catat history stok
+                StockHistory::create([
+                    'produk_id' => $product->id,
+                    'jenis' => 'keluar',
+                    'jumlah' => $item['quantity'],
+                    'stok_lama' => $product->stok,
+                    'stok_baru' => $product->stok - $item['quantity'],
+                    'keterangan' => 'Penjualan POS',
+                    'dibuat_oleh' => Auth::id()
+                ]);
+            }
+
+            // Update data pelanggan jika ada
+            if ($request->customer_id) {
+                $customer = Customer::find($request->customer_id);
+                $customer->total_pembelian += $total;
+                $customer->updateLoyaltyLevel();
+                $customer->addPoints($total);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil',
+                'data' => [
+                    'transaction_id' => $transaction->id,
+                    'code' => $transaction->kode_transaksi,
+                    'total' => $total,
+                    'paid' => $request->amount_paid,
+                    'change' => $request->amount_paid - $total
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 } 

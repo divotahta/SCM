@@ -20,6 +20,13 @@ class Order extends Model
         'jatuh_tempo'
     ];
 
+    protected $dates = [
+        'tanggal_pesanan',
+        'tanggal_pembayaran',
+        'created_at',
+        'updated_at'
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'pelanggan_id');

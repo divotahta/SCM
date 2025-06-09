@@ -11,13 +11,24 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    protected $table = 'transaction';
+
     protected $fillable = [
-        'invoice_number',
+        'kode_transaksi',
         'customer_id',
-        'payment_method',
-        'payment_amount',
-        'total',
-        'status'
+        'user_id',
+        'total_harga',
+        'total_bayar',
+        'total_kembali',
+        'metode_pembayaran',
+        'status',
+        'catatan'
+    ];
+
+    protected $casts = [
+        'total_harga' => 'decimal:2',
+        'total_bayar' => 'decimal:2',
+        'total_kembali' => 'decimal:2'
     ];
 
     protected static function boot()
@@ -25,7 +36,7 @@ class Transaction extends Model
         parent::boot();
 
         static::creating(function ($transaction) {
-            $transaction->invoice_number = static::generateInvoiceNumber();
+            $transaction->kode_transaksi = static::generateInvoiceNumber();
         });
     }
 
@@ -33,12 +44,12 @@ class Transaction extends Model
     {
         $prefix = 'INV';
         $date = now()->format('Ymd');
-        $lastTransaction = static::where('invoice_number', 'like', "{$prefix}{$date}%")
-            ->orderBy('invoice_number', 'desc')
+        $lastTransaction = static::where('kode_transaksi', 'like', "{$prefix}{$date}%")
+            ->orderBy('kode_transaksi', 'desc')
             ->first();
 
         if ($lastTransaction) {
-            $lastNumber = (int) substr($lastTransaction->invoice_number, -4);
+            $lastNumber = (int) substr($lastTransaction->kode_transaksi, -4);
             $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         } else {
             $newNumber = '0001';
@@ -49,12 +60,24 @@ class Transaction extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function details()
     {
-        return $this->hasMany(TransactionDetail::class);
+        return $this->hasMany(TransactionDetail::class, 'transaksi_id');
+    }
+
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'detail_transaksi', 'transaksi_id', 'produk_id')
+            ->withPivot('jumlah', 'harga', 'subtotal')
+            ->withTimestamps();
     }
 
     public function logs()
