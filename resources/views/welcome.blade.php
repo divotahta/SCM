@@ -42,16 +42,16 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero-bg pt-24 pb-16">
+    <section class="hero-bg pt-40 pb-40 bg-cover bg-center" style="background-image: url('https://cdn.pixabay.com/photo/2014/08/02/11/40/high-bay-408222_1280.jpg') ; background-size: cover; background-position: center;">
         <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
-            <div class="flex-1 text-center md:text-left">
+            <div class="flex-1 text-center md:text-left bg-black/50 p-8 rounded-lg text-white">
                 <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Satu Solusi Untuk Semua Kebutuhan Supply Chain</h1>
                 <p class="text-blue-100 text-lg mb-6">SCM Omahkulos adalah bisnis cafe yang menggunakan solusi terpadu untuk manajemen supply chain modern.</p>
                 <a href="{{ route('register') }}" class="inline-block bg-white text-blue-700 font-bold px-8 py-3 rounded-lg shadow hover:bg-blue-50 transition">Mulai Sekarang</a>
             </div>
-            <div class="flex-1 flex justify-center">
+            {{-- <div class="flex-1 flex justify-center">
                 <img src="https://cdn.pixabay.com/photo/2014/08/02/11/40/high-bay-408222_1280.jpg" alt="Supply Chain Illustration" class="w-full max-w-md pixabay-img">
-            </div>
+            </div> --}}
         </div>
     </section>
 
@@ -120,7 +120,7 @@
                     <a href="{{ route('register') }}" class="inline-block bg-white text-blue-700 font-bold px-6 py-2 rounded-lg shadow hover:bg-blue-50 transition">Daftar Sekarang</a>
                 </div>
                 <div class="flex-1 flex justify-center">
-                    <img src="https://cdn.pixabay.com/photo/2017/06/06/22/25/logistics-2373442_1280.png" alt="Promo SCM" class="h-40 pixabay-img">
+                    <img src="https://cdn.pixabay.com/photo/2022/04/04/12/29/garden-7111101_1280.jpg" alt="Promo SCM" class="h-40 pixabay-img">
                 </div>
             </div>
         </div>

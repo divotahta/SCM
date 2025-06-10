@@ -19,7 +19,7 @@
 <body class="min-h-screen flex items-center justify-center register-bg">
     <div class="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 p-6">
         <div class="flex-1 hidden md:flex justify-center">
-            <img src="https://cdn.pixabay.com/photo/2017/06/06/22/25/logistics-2373442_1280.png" alt="Register Illustration" class="w-full max-w-xs pixabay-img">
+            <img src="https://cdn-icons-png.flaticon.com/512/8521/8521787.png" alt="Register Illustration" class="w-full max-w-xs pixabay-img">
         </div>
         <div class="flex-1">
             <div class="register-card p-8">

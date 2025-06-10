@@ -10,6 +10,7 @@ use App\Imports\SuppliersImport;
 use App\Exports\SuppliersExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\PDF;
+use Illuminate\Support\Facades\DB;
 
 class SupplierController extends Controller
 {
@@ -50,18 +51,42 @@ class SupplierController extends Controller
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $data = $request->all();
+        try {
+            DB::beginTransaction();
 
-        if ($request->hasFile('foto')) {
-            $foto = $request->file('foto');
-            $fotoPath = $foto->store('suppliers', 'public');
-            $data['foto'] = $fotoPath;
+            $data = $request->except('foto');
+            // dd($data);
+            if ($request->hasFile('foto') && $request->file('foto')->isValid()) {
+                $foto = $request->file('foto');
+                $filename = time() . '_' . $foto->getClientOriginalName();
+            
+                // Simpan secara manual ke folder storage/app/public/suppliers
+                $targetPath = storage_path('app/public/suppliers');
+            
+                // Pastikan folder tujuan ada
+                if (!file_exists($targetPath)) {
+                    mkdir($targetPath, 0755, true);
+                }
+            
+                $foto->move($targetPath, $filename);
+            
+                // Simpan path yang bisa diakses publik
+                $data['foto'] = 'suppliers/' . $filename;
+            }
+            
+
+            Supplier::create($data);
+
+            DB::commit();
+
+            return redirect()->route('admin.suppliers.index')
+                ->with('success', 'Pemasok berhasil ditambahkan');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menambahkan pemasok: ' . $e->getMessage());
         }
-
-        Supplier::create($data);
-
-        return redirect()->route('admin.suppliers.index')
-            ->with('success', 'Pemasok berhasil ditambahkan');
     }
 
     public function show(Supplier $supplier)
@@ -76,38 +101,41 @@ class SupplierController extends Controller
     }
 
     public function update(Request $request, Supplier $supplier)
-    {
-        $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email|unique:suppliers,email,' . $supplier->id,
-            'telepon' => 'required|string|max:20',
-            'alamat' => 'required|string',
-            'nama_toko' => 'required|string|max:255',
-            'jenis' => 'required|string|in:distributor,grosir',
-            'nama_bank' => 'nullable|string|max:255',
-            'pemegang_rekening' => 'nullable|string|max:255',
-            'nomor_rekening' => 'nullable|string|max:50',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
-        ]);
+{
+    $request->validate([
+        'nama' => 'required|string|max:255',
+        'email' => 'required|email|unique:suppliers,email,' . $supplier->id,
+        'telepon' => 'required|string|max:20',
+        'alamat' => 'required|string',
+        'nama_toko' => 'required|string|max:255',
+        'jenis' => 'required|string|in:distributor,grosir',
+        'nama_bank' => 'nullable|string|max:255',
+        'pemegang_rekening' => 'nullable|string|max:255',
+        'nomor_rekening' => 'nullable|string|max:50',
+        'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+    ]);
 
-        $data = $request->all();
+    $data = $request->except('foto');
 
-        if ($request->hasFile('foto')) {
-            // Hapus foto lama jika ada
-            if ($supplier->foto) {
-                Storage::disk('public')->delete($supplier->foto);
-            }
-            
-            $foto = $request->file('foto');
-            $fotoPath = $foto->store('suppliers', 'public');
-            $data['foto'] = $fotoPath;
+    if ($request->hasFile('foto') && $request->file('foto')->isValid()) {
+        // Hapus foto lama jika ada
+        if ($supplier->foto && Storage::disk('public')->exists($supplier->foto)) {
+            Storage::disk('public')->delete($supplier->foto);
         }
 
-        $supplier->update($data);
-
-        return redirect()->route('admin.suppliers.index')
-            ->with('success', 'Data pemasok berhasil diperbarui');
+        // Upload file baru
+        $foto = $request->file('foto');
+        $filename = time() . '_' . $foto->getClientOriginalName();
+        $foto->move(storage_path('app/public/suppliers'), $filename);
+        $data['foto'] = 'suppliers/' . $filename;
     }
+
+    $supplier->update($data);
+
+    return redirect()->route('admin.suppliers.index')
+        ->with('success', 'Data pemasok berhasil diperbarui');
+}
+
 
     public function destroy(Supplier $supplier)
     {

@@ -40,16 +40,11 @@
                                         POS
                                     </a>
 
-                                    <!-- Transaksi Dropdown -->
-                                    <div x-data="{ open: {{ request()->routeIs('admin.transactions.*') ? 'true' : 'false' }} }" class="relative">
-                                        <button @click="open = !open" class="w-full flex items-center justify-between {{ request()->routeIs('admin.transactions.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
-                                            <div class="flex items-center">
-                                                <i class="fas fa-shopping-cart mr-4"></i>
-                                                Transaksi
-                                            </div>
-                                        </button>
-                                       
-                                    </div>
+                                     <!-- Manajemen Produk -->
+                                     <a href="{{ route('admin.transactions.index') }}" class="flex items-center {{ request()->routeIs('admin.products.*') ? 'bg-blue-100 text-blue-900' : 'bg-white hover:bg-blue-50 text-gray-900' }} rounded-xl font-bold text-sm py-3 px-4">
+                                        <i class="fas fa-shopping-cart mr-4"></i>
+                                        Transaksi
+                                    </a>
 
                                     <!-- Pembelian Dropdown -->
                                     <div x-data="{ open: {{ request()->routeIs('admin.purchases.*') ? 'true' : 'false' }} }" class="relative">

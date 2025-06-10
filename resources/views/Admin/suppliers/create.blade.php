@@ -137,7 +137,6 @@
         </div>
     </div>
 
-    @push('scripts')
     <script>
         // Preview foto
         document.getElementById('foto').addEventListener('change', function(e) {
@@ -156,5 +155,4 @@
             }
         });
     </script>
-    @endpush
 </x-app-layout> 

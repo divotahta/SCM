@@ -19,7 +19,7 @@
 <body class="min-h-screen flex items-center justify-center login-bg">
     <div class="w-full max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8 p-6">
         <div class="flex-1 hidden md:flex justify-center">
-            <img src="https://cdn.pixabay.com/photo/2016/11/29/09/32/stock-1863880_1280.jpg" alt="Login Illustration" class="w-full max-w-xs pixabay-img">
+            <img src="https://cdn-icons-png.flaticon.com/512/7856/7856126.png" alt="Login Illustration" class="w-full max-w-xs pixabay-img">
         </div>
         <div class="flex-1">
             <div class="login-card p-8">
