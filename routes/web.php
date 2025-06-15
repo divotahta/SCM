@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\EoqCalculatorController;
+use App\Http\Controllers\Admin\NotificationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -120,10 +122,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/transactions/print/{transaction}', [TransactionController::class, 'printStruk'])->name('transactions.print');
 
     // Stock Management
-    Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
-    Route::get('stocks/history', [StockController::class, 'history'])->name('stocks.history');
-    Route::post('stocks/{product}/adjust', [StockController::class, 'adjust'])->name('stocks.adjust');
-    Route::get('stocks/forecast', [StockController::class, 'forecast'])->name('stocks.forecast');
+    Route::get('/stocks', [StockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks/history', [StockController::class, 'history'])->name('stocks.history');
+    Route::get('/stocks/forecast', [StockController::class, 'forecast'])->name('stocks.forecast');
+    Route::post('/stocks/{product}/adjust', [StockController::class, 'adjust'])->name('stocks.adjust');
     Route::get('stocks/{product}/barcode', [StockController::class, 'generateBarcode'])->name('stocks.barcode');
     Route::get('stocks/export', [StockController::class, 'exportReport'])->name('stocks.export');
 
@@ -131,7 +133,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('products', [ProductController::class, 'index'])->name('products.index');
     Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
     Route::post('products', [ProductController::class, 'store'])->name('products.store');
-    Route::get('products/{product}', [ProductController::class, 'show'])->name('products.show');
+    Route::get('/products/{product}', [ProductController::class, 'show'])->name('products.show');
     Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
     Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
     Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
@@ -153,17 +155,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('customers/export', [CustomerController::class, 'export'])->name('customers.export');
     Route::post('customers/broadcast', [CustomerController::class, 'broadcast'])->name('customers.broadcast');
 
-    //purchase
-    Route::get('purchases', [AdminPurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('purchases/create', [AdminPurchaseController::class, 'create'])->name('purchases.create');
-    Route::post('purchases', [AdminPurchaseController::class, 'store'])->name('purchases.store');
-    Route::get('purchases/{purchase}', [AdminPurchaseController::class, 'show'])->name('purchases.show');
-    Route::get('purchases/{purchase}/edit', [AdminPurchaseController::class, 'edit'])->name('purchases.edit');
-    Route::put('purchases/{purchase}', [AdminPurchaseController::class, 'update'])->name('purchases.update');
-    Route::delete('purchases/{purchase}', [AdminPurchaseController::class, 'destroy'])->name('purchases.destroy');
-    Route::post('purchases/import', [AdminPurchaseController::class, 'import'])->name('purchases.import');
-    Route::get('purchases/export', [AdminPurchaseController::class, 'export'])->name('purchases.export');
-    Route::post('purchases/broadcast', [AdminPurchaseController::class, 'broadcast'])->name('purchases.broadcast');
+    // Purchase Routes
+    Route::get('/purchases', [AdminPurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/purchases/create', [AdminPurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/purchases', [AdminPurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/purchases/{purchase}', [AdminPurchaseController::class, 'show'])->name('purchases.show');
+    Route::get('/purchases/{purchase}/edit', [AdminPurchaseController::class, 'edit'])->name('purchases.edit');
+    Route::put('/purchases/{purchase}', [AdminPurchaseController::class, 'update'])->name('purchases.update');
+    Route::delete('/purchases/{purchase}', [AdminPurchaseController::class, 'destroy'])->name('purchases.destroy');
+    Route::post('/purchases/import', [AdminPurchaseController::class, 'import'])->name('purchases.import');
+    Route::get('/purchases/export', [AdminPurchaseController::class, 'export'])->name('purchases.export');
+    Route::post('/purchases/broadcast', [AdminPurchaseController::class, 'broadcast'])->name('purchases.broadcast');
+    Route::post('/purchases/{purchase}/approve', [AdminPurchaseController::class, 'approve'])->name('purchases.approve');
+    Route::post('/purchases/{purchase}/reject', [AdminPurchaseController::class, 'reject'])->name('purchases.reject');
+    Route::post('/purchases/{purchase}/receive', [AdminPurchaseController::class, 'receive'])->name('purchases.receive');
+
 
     // Supplier Management
     Route::get('suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
@@ -176,6 +182,22 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('suppliers/import', [SupplierController::class, 'import'])->name('suppliers.import');
     Route::get('suppliers/export', [SupplierController::class, 'export'])->name('suppliers.export');
     Route::post('suppliers/broadcast', [SupplierController::class, 'broadcast'])->name('suppliers.broadcast');
+
+    // EOQ Calculator Routes
+    Route::get('/stocks/eoq-calculator', [EoqCalculatorController::class, 'index'])->name('stocks.eoq.calculator');
+    Route::post('/stocks/eoq-calculate', [EoqCalculatorController::class, 'calculate'])->name('stocks.eoq.calculate');
+
+    // Ganti dengan route baru
+    Route::get('/eoq-calculator', [EoqCalculatorController::class, 'index'])->name('eoq.calculator');
+    Route::post('/eoq-calculate', [EoqCalculatorController::class, 'calculate'])->name('eoq.calculate');
+
+    // Notification Routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/list', [NotificationController::class, 'getNotifications'])->name('notifications.list');
+    Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread-count');
+    Route::get('/admin/notifications', [NotificationController::class, 'getNotifications'])->name('admin.notifications');
 });
 
 // Owner Routes

@@ -16,16 +16,16 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->text('catatan')->nullable();
             $table->enum('status_pembelian', ['draft', 'pending', 'approved', 'rejected', 'received'])->default('draft');
+            $table->foreignId('dibuat_oleh')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('disetujui_oleh')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('disetujui_pada')->nullable();
-            $table->foreignId('disetujui_oleh')->nullable()->constrained('users');
+            $table->foreignId('ditolak_oleh')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('ditolak_pada')->nullable();
-            $table->foreignId('ditolak_oleh')->nullable()->constrained('users');
             $table->text('alasan_penolakan')->nullable();
+            $table->foreignId('diterima_oleh')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('diterima_pada')->nullable();
-            $table->foreignId('diterima_oleh')->nullable()->constrained('users');
-            $table->foreignId('dibuat_oleh')->constrained('users');
-            $table->foreignId('diperbarui_oleh')->nullable()->constrained('users');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

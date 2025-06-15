@@ -146,7 +146,8 @@ class TransactionController extends Controller
             'products.*.quantity' => 'required|integer|min:1',
             'metode_pembayaran' => 'required|in:cash,transfer,qris',
             'total_bayar' => 'required|numeric|min:0',
-            'catatan' => 'nullable|string'
+            'catatan' => 'nullable|string',
+            'status' => 'required|in:batal,selesai'
         ]);
 
         try {
@@ -174,7 +175,8 @@ class TransactionController extends Controller
                 'total_bayar' => $request->total_bayar,
                 'total_kembali' => $request->total_bayar - $total_harga,
                 'metode_pembayaran' => $request->metode_pembayaran,
-                'catatan' => $request->catatan
+                'catatan' => $request->catatan,
+                'status' => $request->status
             ]);
 
             // Hapus detail lama
@@ -207,33 +209,33 @@ class TransactionController extends Controller
         }
     }
 
-    public function destroy(Transaction $transaction)
-    {
-        if ($transaction->status === 'void') {
-            return back()->with('error', 'Transaksi yang sudah dibatalkan tidak dapat dihapus');
-        }
+    // public function destroy(Transaction $transaction)
+    // {
+    //     if ($transaction->status === 'void') {
+    //         return back()->with('error', 'Transaksi yang sudah dibatalkan tidak dapat dihapus');
+    //     }
 
-        try {
-            DB::beginTransaction();
+    //     try {
+    //         DB::beginTransaction();
 
-            // Kembalikan stok
-            foreach ($transaction->details as $detail) {
-                $detail->product->increment('stok', $detail->jumlah);
-            }
+    //         // Kembalikan stok
+    //         foreach ($transaction->details as $detail) {
+    //             $detail->product->increment('stok', $detail->jumlah);
+    //         }
 
-            // Hapus transaksi
-            $transaction->delete();
+    //         // Hapus transaksi
+    //         $transaction->delete();
 
-            DB::commit();
+    //         DB::commit();
 
-            return redirect()->route('admin.transactions.index')
-                ->with('success', 'Transaksi berhasil dihapus');
+    //         return redirect()->route('admin.transactions.index')
+    //             ->with('success', 'Transaksi berhasil dihapus');
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', $e->getMessage());
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return back()->with('error', $e->getMessage());
+    //     }
+    // }
 
     public function exportExcel()
     {

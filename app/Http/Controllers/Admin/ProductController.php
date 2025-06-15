@@ -11,20 +11,21 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ProductsExport;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
         $query = Product::with(['category', 'unit'])
-            ->when($request->search, function($q) use ($request) {
+            ->when($request->search, function ($q) use ($request) {
                 return $q->where('nama_produk', 'like', "%{$request->search}%")
                     ->orWhere('kode_produk', 'like', "%{$request->search}%");
             })
-            ->when($request->kategori_id, function($q) use ($request) {
+            ->when($request->kategori_id, function ($q) use ($request) {
                 return $q->where('kategori_id', $request->kategori_id);
             })
-            ->when($request->status_stok, function($q) use ($request) {
+            ->when($request->status_stok, function ($q) use ($request) {
                 if ($request->status_stok === 'low') {
                     return $q->where('stok', '<=', 10);
                 } elseif ($request->status_stok === 'out') {
@@ -35,7 +36,7 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(10);
         $categories = Category::all();
-        
+
         return view('admin.products.index', compact('products', 'categories'));
     }
 
@@ -120,46 +121,14 @@ class ProductController extends Controller
         if ($product->image) {
             Storage::delete('public/products/' . $product->image);
         }
-        
+
         $product->delete();
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Produk berhasil dihapus');
     }
 
-    public function bulkAction(Request $request)
-    {
-        $request->validate([
-            'action' => 'required|in:delete,update_category',
-            'product_ids' => 'required|array',
-            'product_ids.*' => 'exists:products,id',
-            'category_id' => 'required_if:action,update_category|exists:categories,id'
-        ]);
 
-        $products = Product::whereIn('id', $request->product_ids);
-
-        switch ($request->action) {
-            case 'delete':
-                // Delete product images
-                $products->get()->each(function($product) {
-                    if ($product->image) {
-                        Storage::delete('public/products/' . $product->image);
-                    }
-                });
-                
-                $products->delete();
-                $message = 'Produk berhasil dihapus';
-                break;
-
-            case 'update_category':
-                $products->update(['category_id' => $request->category_id]);
-                $message = 'Kategori produk berhasil diperbarui';
-                break;
-        }
-
-        return redirect()->route('admin.products.index')
-            ->with('success', $message);
-    }
 
     public function exportExcel(Request $request)
     {
@@ -169,10 +138,10 @@ class ProductController extends Controller
     public function checkCode(Request $request)
     {
         $code = $request->code;
-        $productId = $request->product_id;
+        $productId = $request->produk_id;
 
         $query = Product::where('kode_produk', $code);
-        
+
         if ($productId) {
             $query->where('id', '!=', $productId);
         }
@@ -183,4 +152,44 @@ class ProductController extends Controller
             'exists' => $exists
         ]);
     }
-} 
+
+    public function show(Product $product)
+    {
+        $product->load(['category', 'unit', 'stockHistories' => function ($query) {
+            $query->latest()->take(10);
+        }]);
+
+        // Hitung total penjualan
+        $totalSold = DB::table('transaction_detail')
+            ->where('produk_id', $product->id)
+            ->sum('jumlah');
+
+        // Hitung total pembelian
+        $totalPurchased = DB::table('purchase_details')
+            ->where('produk_id', $product->id)
+            ->sum('jumlah');
+
+        // Ambil data penjualan 6 bulan terakhir untuk grafik
+        $monthlySales = DB::table('transaction_detail')
+            ->join('transaction', 'transaction_detail.transaksi_id', '=', 'transaction.id') // ganti transaction_id -> transaksi_id
+            ->where('transaction_detail.produk_id', $product->id)
+            ->where('transaction.created_at', '>=', now()->subMonths(6))
+            ->select(
+                DB::raw('MONTH(transaction.created_at) as bulan'),
+                DB::raw('YEAR(transaction.created_at) as tahun'),
+                DB::raw('SUM(transaction_detail.jumlah) as total_terjual')
+            )
+            ->groupBy('tahun', 'bulan')
+            ->orderBy('tahun')
+            ->orderBy('bulan')
+            ->get();
+
+
+        return view('Admin.products.show', compact(
+            'product',
+            'totalSold',
+            'totalPurchased',
+            'monthlySales'
+        ));
+    }
+}

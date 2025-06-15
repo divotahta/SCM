@@ -65,7 +65,11 @@
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Penjualan Bulanan
+                                    Penjualan Mingguan
+                                </th>
+                                <th scope="col"
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Prediksi Minggu Depan
                                 </th>
                                 <th scope="col"
                                     class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -101,7 +105,11 @@
                                         {{ $product->stok }} {{ $product->unit->nama_satuan }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {{ number_format($product->forecast['monthly_sales'], 0) }}
+                                        {{ number_format($product->forecast['avg_weekly_sales'], 0) }}
+                                        {{ $product->unit->nama_satuan }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {{ number_format($product->forecast['next_week_forecast'], 0) }}
                                         {{ $product->unit->nama_satuan }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

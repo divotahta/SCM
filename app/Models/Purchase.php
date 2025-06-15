@@ -5,13 +5,13 @@ namespace App\Models;
 use App\Models\User;
 use App\Models\Supplier;
 use App\Models\PurchaseDetail;
-use App\Models\PurchaseApprovalHistory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Purchase extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'pemasok_id',
@@ -20,13 +20,14 @@ class Purchase extends Model
         'total_amount',
         'catatan',
         'status_pembelian',
-        'disetujui_pada',
+        'dibuat_oleh',
         'disetujui_oleh',
-        'ditolak_pada',
+        'disetujui_pada',
         'ditolak_oleh',
+        'ditolak_pada',
         'alasan_penolakan',
-        'diterima_pada',
-        'diterima_oleh'
+        'diterima_oleh',
+        'diterima_pada'
     ];
 
     protected $casts = [
@@ -61,11 +62,6 @@ class Purchase extends Model
         return $this->belongsTo(User::class, 'diterima_oleh');
     }
 
-    public function approvalHistory()
-    {
-        return $this->hasMany(PurchaseApprovalHistory::class, 'pembelian_id');
-    }
-
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'dibuat_oleh');
@@ -73,19 +69,9 @@ class Purchase extends Model
 
     public function generateInvoiceNumber()
     {
-        $prefix = 'PO';
-        $date = now()->format('Ymd');
-        $lastPurchase = self::where('invoice_number', 'like', "{$prefix}{$date}%")
-            ->orderBy('invoice_number', 'desc')
-            ->first();
-
-        if ($lastPurchase) {
-            $lastNumber = (int) substr($lastPurchase->invoice_number, -4);
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return "{$prefix}{$date}{$newNumber}";
+        $lastPurchase = $this->orderBy('id', 'desc')->first();
+        $lastNumber = $lastPurchase ? intval(substr($lastPurchase->nomor_pembelian, 3)) : 0;
+        $newNumber = $lastNumber + 1;
+        return 'PUR' . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
     }
 } 

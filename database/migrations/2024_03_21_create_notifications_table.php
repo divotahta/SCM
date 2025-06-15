@@ -8,20 +8,22 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('stock_adjustments', function (Blueprint $table) {
+        Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produk_id')->constrained('products')->onDelete('cascade');
-            $table->integer('jumlah');
-            $table->enum('jenis', ['masuk', 'keluar']);
-            $table->text('keterangan');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('judul');
+            $table->text('pesan');
+            $table->string('jenis');
+            $table->string('link');
+            $table->boolean('dibaca')->default(false);
+            $table->json('detail')->nullable();
+
             $table->timestamps();
         });
     }
 
-
     public function down()
     {
-        Schema::dropIfExists('stock_adjustments');
+        Schema::dropIfExists('notifications');
     }
-};
+}; 

@@ -147,14 +147,12 @@
     </div>
 
     <!-- Modal Sesuaikan Stok -->
-    <div id="adjustModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog"
-        aria-modal="true">
+    <div id="adjustStockModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
             <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div
-                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <form id="adjustForm" method="POST">
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="adjustStockForm" method="POST">
                     @csrf
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
@@ -163,43 +161,37 @@
                                     Sesuaikan Stok
                                 </h3>
                                 <div class="mt-4">
-                                    <p class="text-sm text-gray-500" id="productName"></p>
-                                    <p class="text-sm text-gray-500">Stok saat ini: <span id="currentStock"></span></p>
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-500" id="productName"></p>
+                                        <p class="text-sm text-gray-500">Stok saat ini: <span id="currentStock"></span></p>
+                                    </div>
 
-                                    <div class="mt-4">
-                                        <label for="type" class="block text-sm font-medium text-gray-700">Tipe
-                                            Penyesuaian</label>
-                                        <select name="type" id="type" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <option value="addition">Penambahan</option>
-                                            <option value="reduction">Pengurangan</option>
+                                    <div class="mb-4">
+                                        <label for="jenis" class="block text-sm font-medium text-gray-700">Jenis Penyesuaian</label>
+                                        <select name="jenis" id="jenis" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="masuk">Tambah</option>
+                                            <option value="keluar">Kurang</option>
                                         </select>
                                     </div>
 
-                                    <div class="mt-4">
-                                        <label for="quantity"
-                                            class="block text-sm font-medium text-gray-700">Jumlah</label>
-                                        <input type="number" name="quantity" id="quantity" required min="1"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <div class="mb-4">
+                                        <label for="jumlah" class="block text-sm font-medium text-gray-700">Jumlah</label>
+                                        <input type="number" name="jumlah" id="jumlah" required min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
 
-                                    <div class="mt-4">
-                                        <label for="reason"
-                                            class="block text-sm font-medium text-gray-700">Alasan</label>
-                                        <textarea name="reason" id="reason" rows="3" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                    <div class="mb-4">
+                                        <label for="keterangan" class="block text-sm font-medium text-gray-700">Keterangan</label>
+                                        <textarea name="keterangan" id="keterangan" rows="3" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                        <button type="submit"
-                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
                             Simpan
                         </button>
-                        <button type="button" onclick="closeAdjustModal()"
-                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        <button type="button" onclick="closeAdjustModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                             Batal
                         </button>
                     </div>
@@ -208,29 +200,73 @@
         </div>
     </div>
 
-        <script>
-            function openAdjustModal(productId, productName, currentStock) {
-                document.getElementById('adjustForm').action = `/admin/stocks/${productId}/adjust`;
-                document.getElementById('productName').textContent = productName;
-                document.getElementById('currentStock').textContent = currentStock;
-                document.getElementById('adjustModal').classList.remove('hidden');
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    function openAdjustModal(productId, productName, currentStock) {
+        const modal = document.getElementById('adjustStockModal');
+        const productNameEl = document.getElementById('productName');
+        const currentStockEl = document.getElementById('currentStock');
+        const form = document.getElementById('adjustStockForm');
+
+        if (modal && productNameEl && currentStockEl && form) {
+            form.action = `/admin/stocks/${productId}/adjust`;
+            productNameEl.textContent = productName;
+            currentStockEl.textContent = currentStock;
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function closeAdjustModal() {
+        const modal = document.getElementById('adjustStockModal');
+        const form = document.getElementById('adjustStockForm');
+        
+        if (modal && form) {
+            modal.classList.add('hidden');
+            form.reset();
+        }
+    }
+
+    document.getElementById('adjustStockForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: data.message,
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: data.message
+                });
             }
-
-            function closeAdjustModal() {
-                document.getElementById('adjustModal').classList.add('hidden');
-                document.getElementById('adjustForm').reset();
-            }
-
-            // Validasi form
-            document.getElementById('adjustForm').addEventListener('submit', function(e) {
-                const type = document.getElementById('type').value;
-                const quantity = parseInt(document.getElementById('quantity').value);
-                const currentStock = parseInt(document.getElementById('currentStock').textContent);
-
-                if (type === 'reduction' && quantity > currentStock) {
-                    e.preventDefault();
-                    alert('Jumlah pengurangan tidak boleh melebihi stok saat ini');
-                }
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: 'Terjadi kesalahan saat menyimpan data'
             });
-        </script>
+        });
+    });
+    </script>
 </x-app-layout>

@@ -68,50 +68,58 @@ class StockController extends Controller
     public function adjust(Request $request, Product $product)
     {
         $request->validate([
-            'quantity' => 'required|integer',
-            'type' => 'required|in:addition,reduction',
-            'reason' => 'required|string|max:255'
+            'jenis' => 'required|in:masuk,keluar',
+            'jumlah' => 'required|integer|min:1',
+            'keterangan' => 'required|string|max:255'
         ]);
 
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
+
+            $quantity = $request->jumlah;
+            $type = $request->jenis;
             $oldStock = $product->stok;
-            $quantity = $request->quantity;
-            
-            if ($request->type === 'addition') {
-                $newStock = $oldStock + $quantity;
-            } else {
-                if ($oldStock < $quantity) {
-                    throw new \Exception('Stok tidak mencukupi untuk pengurangan');
-                }
-                $newStock = $oldStock - $quantity;
+
+            if ($type === 'keluar' && $quantity > $oldStock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jumlah pengurangan tidak boleh melebihi stok saat ini'
+                ], 422);
             }
 
-            // Update stok produk
+            $newStock = $type === 'masuk' ? $oldStock + $quantity : $oldStock - $quantity;
+            
             $product->update(['stok' => $newStock]);
 
-            // Catat history
+            // Catat history penyesuaian
             StockHistory::create([
-                'product_id' => $product->id,
-                'type' => $request->type,
-                'quantity' => $quantity,
-                'old_stock' => $oldStock,
-                'new_stock' => $newStock,
-                'description' => $request->reason,
-                'user_id' => Auth::id()
+                'produk_id' => $product->id,
+                'jenis' => $type,
+                'jumlah' => $quantity,
+                'stok_lama' => $oldStock,
+                'stok_baru' => $newStock,
+                'keterangan' => $request->keterangan,
+                'dibuat_oleh' => Auth::id()
             ]);
 
             DB::commit();
-            return redirect()->back()->with('success', 'Stok berhasil disesuaikan');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stok berhasil disesuaikan'
+            ]);
         } catch (\Exception $e) {
-            DB::rollback();
-            return redirect()->back()->with('error', $e->getMessage());
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyesuaikan stok: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     public function report(Request $request)
     {
-        $query = StockHistory::with(['product', 'user']);
+        $query = StockHistory::with(['produk', 'user']);
 
         // Filter berdasarkan tanggal
         if ($request->has('start_date') && $request->has('end_date')) {
@@ -122,8 +130,8 @@ class StockController extends Controller
         }
 
         // Filter berdasarkan produk
-        if ($request->has('product_id')) {
-            $query->where('product_id', $request->product_id);
+        if ($request->has('produk_id')) {
+            $query->where('produk_id', $request->produk_id);
         }
 
         $histories = $query->get();
@@ -152,24 +160,40 @@ class StockController extends Controller
 
         // Hitung forecast untuk setiap produk
         foreach ($products as $product) {
-            // Hitung rata-rata penjualan bulanan
-            $monthlySales = $product->orderDetails()
-                ->whereMonth('created_at', now()->month)
-                ->sum('jumlah');
+            // Hitung rata-rata penjualan mingguan
+            $weeklySales = $product->transactionDetails()
+                ->whereBetween('created_at', [now()->subWeeks(4), now()])
+                ->selectRaw('WEEK(created_at) as week, SUM(jumlah) as total')
+                ->groupBy('week')
+                ->get();
+
+            // Hitung rata-rata penjualan per minggu
+            $avgWeeklySales = $weeklySales->avg('total') ?? 0;
+
+            // Hitung standar deviasi penjualan mingguan
+            $stdDev = 0;
+            if ($weeklySales->count() > 0) {
+                $mean = $weeklySales->avg('total');
+                $variance = $weeklySales->sum(function($sale) use ($mean) {
+                    return pow($sale->total - $mean, 2);
+                }) / $weeklySales->count();
+                $stdDev = sqrt($variance);
+            }
 
             // Hitung lead time (dalam hari)
-            $leadTime = 7; // Contoh: 7 hari
+            $leadTime = 7; // 7 hari
 
-            // Hitung safety stock
-            $safetyStock = $monthlySales * 0.2; // 20% dari penjualan bulanan
+            // Hitung safety stock dengan service level 95%
+            $serviceLevel = 1.645; // Z-score untuk 95% service level
+            $safetyStock = $serviceLevel * $stdDev * sqrt($leadTime/7);
 
             // Hitung reorder point
-            $reorderPoint = ($monthlySales / 30 * $leadTime) + $safetyStock;
+            $reorderPoint = ($avgWeeklySales * ($leadTime/7)) + $safetyStock;
 
             // Hitung economic order quantity (EOQ)
             $orderCost = 100000; // Biaya pemesanan
             $holdingCost = 0.2; // Biaya penyimpanan (20% dari harga)
-            $annualDemand = $monthlySales * 12;
+            $annualDemand = $avgWeeklySales * 52; // 52 minggu dalam setahun
             
             if ($product->harga_beli > 0 && $holdingCost > 0) {
                 $eoq = sqrt((2 * $annualDemand * $orderCost) / ($product->harga_beli * $holdingCost));
@@ -177,12 +201,24 @@ class StockController extends Controller
                 $eoq = 0;
             }
 
+            // Analisis tren penjualan
+            $trend = 0;
+            if ($weeklySales->count() > 1) {
+                $firstWeek = $weeklySales->first()->total;
+                $lastWeek = $weeklySales->last()->total;
+                $trend = ($lastWeek - $firstWeek) / $weeklySales->count();
+            }
+
             $product->forecast = [
-                'monthly_sales' => $monthlySales,
+                'weekly_sales' => $weeklySales,
+                'avg_weekly_sales' => $avgWeeklySales,
+                'std_dev' => $stdDev,
                 'lead_time' => $leadTime,
                 'safety_stock' => $safetyStock,
                 'reorder_point' => $reorderPoint,
-                'eoq' => $eoq
+                'eoq' => $eoq,
+                'trend' => $trend,
+                'next_week_forecast' => $avgWeeklySales + $trend
             ];
         }
 
@@ -214,11 +250,11 @@ class StockController extends Controller
     public function printBulkBarcode(Request $request)
     {
         $request->validate([
-            'product_ids' => 'required|array',
-            'product_ids.*' => 'exists:products,id'
+            'produk_ids' => 'required|array',
+            'produk_ids.*' => 'exists:products,id'
         ]);
 
-        $products = Product::whereIn('id', $request->product_ids)->get();
+        $products = Product::whereIn('id', $request->produk_ids)->get();
         return view('admin.stocks.bulk-barcode', compact('products'));
     }
 }

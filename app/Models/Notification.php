@@ -5,26 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class StockAdjustment extends Model
+class Notification extends Model
 {
     use HasFactory;
 
+    protected $table = 'notifications';
+
     protected $fillable = [
-        'produk_id',
-        'jumlah',
+        'user_id',
+        'judul',
+        'pesan',
         'jenis',
-        'keterangan',
-        'user_id'
+        'dibaca',
+        'detail',
+        "link",
     ];
 
     protected $casts = [
-        'quantity' => 'integer'
+        'dibaca' => 'boolean',
+        'detail' => 'array'
     ];
-
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
 
     public function user()
     {

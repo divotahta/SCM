@@ -18,8 +18,11 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             CustomerSeeder::class,
             ProductSeeder::class,
-            PurchaseSeeder::class,
-            // OrderSeeder::class,
+            TransactionSeeder::class,
+            StockHistorySeeder::class,
+            StockTriggerSeeder::class,
+            // NotificationSeeder::class,
+            // StockAlertSeeder::class,
         ]);
     }
 }

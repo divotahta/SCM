@@ -28,9 +28,11 @@
                                     class="block text-sm font-medium text-gray-700">Pelanggan</label>
                                 <select name="customer_id" id="customer_id" required
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                    <option value="">Pilih Pelanggan</option>
+                                    <option value="{{ $transaction->pelanggan_id }}">
+                                        {{ $transaction->customer->nama }}
+                                    </option>
                                     @foreach ($customers as $customer)
-                                        <option value="{{ $customer->id }}"
+                                        <option value="{{ $customer->id}}"
                                             {{ old('customer_id', $transaction->customer_id) == $customer->id ? 'selected' : '' }}>
                                             {{ $customer->nama }}
                                         </option>
@@ -59,7 +61,9 @@
                                     <div class="col-span-5">
                                         <select name="products[{{ $index }}][product_id]" required
                                             class="product-select block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <option value="">Pilih Produk</option>
+                                            <option value="{{ $detail->produk_id }}">
+                                                {{ $detail->product->nama_produk }}
+                                            </option>
                                             @foreach ($products as $product)
                                                 <option value="{{ $product->id }}"
                                                     data-price="{{ $product->harga_jual }}"
@@ -120,26 +124,39 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="total_paid" class="block text-sm font-medium text-gray-700">Total
+                                <label for="total_bayar" class="block text-sm font-medium text-gray-700">Total
                                     Dibayar</label>
-                                <input type="number" name="total_paid" id="total_paid" required min="0"
-                                    step="1000" value="{{ old('total_paid', $transaction->total_paid) }}"
+                                <input type="number" name="total_bayar" id="total_bayar" required min="0"
+                                    step="0.01" value="{{ old('total_bayar', $transaction->total_bayar) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </div>
                             <div>
-                                <label for="total_amount" class="block text-sm font-medium text-gray-700">Total
+                                <label for="total_harga" class="block text-sm font-medium text-gray-700">Total
                                     Harga</label>
-                                <input type="number" name="total_amount" id="total_amount" required readonly
-                                    value="{{ old('total_amount', $transaction->total_harga) }}"
+                                <input type="number" name="total_harga" id="total_harga" required readonly
+                                    value="{{ old('total_harga', $transaction->total_harga) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm">
                             </div>
                             <div>
-                                <label for="change" class="block text-sm font-medium text-gray-700">Kembalian</label>
-                                <input type="number" name="change" id="change" required readonly
-                                    value="{{ old('change', $transaction->change) }}"
+                                <label for="total_kembali" class="block text-sm font-medium text-gray-700">Kembalian</label>
+                                <input type="number" name="total_kembali" id="total_kembali" required readonly
+                                    value="{{ old('total_kembali', $transaction->total_kembali) }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm">
                             </div>
+                            <div>
+                                <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                                <select name="status" id="status" required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <option value="batal"
+                                        {{ old('status', $transaction->status) == 'batal' ? 'selected' : '' }}>
+                                        Batal</option>
+                                    <option value="selesai"
+                                        {{ old('status', $transaction->status) == 'selesai' ? 'selected' : '' }}>
+                                        Selesai</option>
+                                </select>
+                            </div>
                         </div>
+
                     </div>
 
                     <!-- Catatan -->

@@ -15,7 +15,9 @@ return new class extends Migration
             $table->integer('jumlah');
             $table->decimal('harga_satuan', 10, 2);
             $table->decimal('total', 10, 2);
+            $table->text('catatan')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

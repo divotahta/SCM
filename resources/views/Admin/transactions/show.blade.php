@@ -60,10 +60,6 @@
                                 <p class="mt-1">{{ $transaction->customer->nama }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Email</label>
-                                <p class="mt-1">{{ $transaction->customer->email }}</p>
-                            </div>
-                            <div>
                                 <label class="block text-sm font-medium text-gray-700">Telepon</label>
                                 <p class="mt-1">{{ $transaction->customer->telepon }}</p>
                             </div>
@@ -145,7 +141,7 @@
                         class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-900 focus:outline-none focus:border-green-900 focus:ring ring-green-300 disabled:opacity-25 transition">
                         Print Struk
                     </a>
-                    @if ($transaction->status !== 'void')
+                    @if ($transaction->status !== 'selesai')
                         <a href="{{ route('admin.transactions.edit', $transaction) }}"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-900 focus:outline-none focus:border-blue-900 focus:ring ring-blue-300 disabled:opacity-25 transition">
                             Edit

@@ -137,7 +137,7 @@
                                         class="text-indigo-600 hover:text-indigo-900 mr-3">
                                         Detail
                                     </a>
-                                    @if ($transaction->status !== 'void')
+                                    @if ($transaction->status !== 'selesai')
                                         <a href="{{ route('admin.transactions.edit', $transaction) }}"
                                             class="text-yellow-600 hover:text-yellow-900 mr-3">
                                             Edit

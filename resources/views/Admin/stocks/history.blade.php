@@ -25,11 +25,11 @@
                             </div>
                             <div>
                                 <label for="type" class="block text-sm font-medium text-gray-700">Tipe</label>
-                                <select name="type" id="type" 
+                                <select name="jenis" id="jenis" 
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     <option value="">Semua Tipe</option>
-                                    <option value="addition" {{ request('type') === 'addition' ? 'selected' : '' }}>Penambahan</option>
-                                    <option value="reduction" {{ request('type') === 'reduction' ? 'selected' : '' }}>Pengurangan</option>
+                                    <option value="masuk" {{ request('jenis') === 'masuk' ? 'selected' : '' }}>Penambahan</option>
+                                    <option value="keluar" {{ request('jenis') === 'keluar' ? 'selected' : '' }}>Pengurangan</option>
                                 </select>
                             </div>
                             <div>
@@ -93,8 +93,8 @@
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                {{ $history->type === 'addition' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                                {{ $history->type === 'addition' ? 'Penambahan' : 'Pengurangan' }}
+                                                {{ $history->jenis === 'masuk' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                {{ $history->jenis === 'keluar' ? 'Pengurangan' : 'Penambahan' }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
